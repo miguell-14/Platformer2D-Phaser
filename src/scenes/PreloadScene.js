@@ -17,6 +17,13 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.spritesheet('player_jump', 'assets/images/player/Dude_Monster_Jump_8.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('player_death', 'assets/images/player/Dude_Monster_Death_8.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('player_hurt', 'assets/images/player/Dude_Monster_Hurt_4.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('player_attack1', 'assets/images/player/Dude_Monster_Attack1_4.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('player_walkattack', 'assets/images/player/Dude_Monster_Walk+Attack_6.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('player_hurt', 'assets/images/player/Dude_Monster_Hurt_4.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('player_death', 'assets/images/player/Dude_Monster_Death_8.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('player_climb', 'assets/images/player/Dude_Monster_Climb_4.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('player_push', 'assets/images/player/Dude_Monster_Push_6.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('dust', 'assets/images/player/Walk_Run_Push_Dust_6.png', { frameWidth: 32, frameHeight: 32 });
 
     // Tilemap
     this.load.tilemapTiledJSON('level1', 'assets/level1.json');
