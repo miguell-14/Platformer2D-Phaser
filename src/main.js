@@ -4,9 +4,10 @@ import GameScene from './scenes/GameScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
 
 const config = {
-  type: Phaser.AUTO,
+  type: Phaser.CANVAS,
   width: 800,
   height: 450,
+  roundPixels: true,
   backgroundColor: '#1a1a2e',
   scale: {
     mode: Phaser.Scale.FIT,
@@ -14,7 +15,7 @@ const config = {
   },
   physics: {
     default: 'arcade',
-    arcade: { gravity: { y: 1200 }, debug: true }
+    arcade: { gravity: { y: 1200 }, debug: false }
   },
   scene: [PreloadScene, MenuScene, GameScene, GameOverScene]
 };

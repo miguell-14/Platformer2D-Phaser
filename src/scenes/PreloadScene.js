@@ -17,9 +17,21 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.spritesheet('player_jump', 'assets/images/player/Dude_Monster_Jump_8.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('player_death', 'assets/images/player/Dude_Monster_Death_8.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('player_hurt', 'assets/images/player/Dude_Monster_Hurt_4.png', { frameWidth: 32, frameHeight: 32 });
+
+    // Tilemap
+    this.load.tilemapTiledJSON('level1', 'assets/level1.json');
+    this.load.image('tiles', 'assets/images/tiles/Tileset-extruded.png');
+
+    // Backgrounds
+    this.load.image('bg_sky', 'assets/images/tiles/CloudsBack.png');
+    this.load.image('bg_mountains', 'assets/images/tiles/BGBack.png');
+    this.load.image('bg_front', 'assets/images/tiles/BGFront.png');
+    this.load.image('clouds_front', 'assets/images/tiles/CloudsFront.png');
   }
 
   create() {
     this.scene.start('MenuScene');
   }
+
+  
 }

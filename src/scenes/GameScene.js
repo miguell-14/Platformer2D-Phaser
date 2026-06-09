@@ -4,32 +4,45 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
-    // Fundo
-    this.add.rectangle(400, 225, 800, 450, 0x1a1a2e);
+    const width = this.scale.width;
+    const height = this.scale.height;
 
-    // Plataformas
-    const ground = this.add.rectangle(400, 430, 800, 20, 0x4a9eff);
-    this.physics.add.existing(ground, true);
+    // Backgrounds
+    this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0, 0).setScrollFactor(0);
+    this.bgSky.setDisplaySize(width, height);
 
-    const p1 = this.add.rectangle(150, 330, 180, 20, 0x4a9eff);
-    this.physics.add.existing(p1, true);
+    this.bgMountains = this.add.image(0, 0, 'bg_mountains').setOrigin(0, 1).setScrollFactor(0.1);
+    this.bgMountains.y = height;
 
-    const p2 = this.add.rectangle(450, 250, 180, 20, 0x4a9eff);
-    this.physics.add.existing(p2, true);
+    this.bgFront = this.add.image(0, 0, 'bg_front').setOrigin(0, 1).setScrollFactor(0.2);
+    this.bgFront.y = height;
 
-    const p3 = this.add.rectangle(200, 160, 180, 20, 0x4a9eff);
-    this.physics.add.existing(p3, true);
+    // Tilemap
+    const map = this.make.tilemap({ key: 'level1' });
+    const tileset = map.addTilesetImage('Tileset', 'tiles', 16, 16, 1, 2);
+    const groundLayer = map.createLayer('Ground', tileset, 0, 0);
+    groundLayer.setScale(2);
+    groundLayer.setCollisionByProperty({ collides: true });
+
+    // Bounds
+    this.physics.world.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
+    this.cameras.main.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
 
     // Jogador
-    this.player = this.physics.add.sprite(100, 380, 'player_idle');
+    this.player = this.physics.add.sprite(100, 200, 'player_idle');
     this.player.setBounce(0.1);
     this.player.setCollideWorldBounds(true);
     this.player.setScale(2);
     this.player.body.setSize(20, 26);
     this.player.body.setOffset(6, 6);
-    this.isJumping = false;
-    this.jumpTimer = 0;
-    this.jumpMaxTime = 200;
+    this.player.setTexture('player_idle');
+
+    
+    // Colisão
+    this.physics.add.collider(this.player, groundLayer);
+
+    // Câmara
+    this.cameras.main.startFollow(this.player);
 
     // Animações
     this.anims.create({
@@ -38,14 +51,12 @@ export default class GameScene extends Phaser.Scene {
       frameRate: 8,
       repeat: -1
     });
-
     this.anims.create({
       key: 'walk',
       frames: this.anims.generateFrameNumbers('player_walk', { start: 0, end: 5 }),
       frameRate: 10,
       repeat: -1
     });
-
     this.anims.create({
       key: 'jump',
       frames: this.anims.generateFrameNumbers('player_jump', { start: 0, end: 7 }),
@@ -53,14 +64,11 @@ export default class GameScene extends Phaser.Scene {
       repeat: 0
     });
 
-    // Colisões
-    this.physics.add.collider(this.player, ground);
-    this.physics.add.collider(this.player, p1);
-    this.physics.add.collider(this.player, p2);
-    this.physics.add.collider(this.player, p3);
-
     // Input
     this.cursors = this.input.keyboard.createCursorKeys();
+    this.isJumping = false;
+    this.jumpTimer = 0;
+    this.jumpMaxTime = 200;
   }
 
   update() {
