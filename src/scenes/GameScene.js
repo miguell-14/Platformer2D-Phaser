@@ -33,13 +33,19 @@ export default class GameScene extends Phaser.Scene {
     this.player.setBounce(0.1);
     this.player.setCollideWorldBounds(true);
     this.player.setScale(2);
-    this.player.body.setSize(20, 26);
-    this.player.body.setOffset(6, 6);
-    this.player.setTexture('player_idle');
+    this.player.body.setSize(14, 28);
+    this.player.body.setOffset(9, 4);
 
-    
     // Colisão
-    this.physics.add.collider(this.player, groundLayer);
+    this.physics.add.collider(this.player, groundLayer, null, (player, tile) => {
+      if (tile.properties && tile.properties.oneWay) {
+        return player.body.velocity.y > 0;
+      }
+      if (tile.properties && tile.properties.collides) {
+        return true;
+      }
+      return false;
+    });
 
     // Câmara
     this.cameras.main.startFollow(this.player);
@@ -51,12 +57,14 @@ export default class GameScene extends Phaser.Scene {
       frameRate: 8,
       repeat: -1
     });
+
     this.anims.create({
       key: 'walk',
       frames: this.anims.generateFrameNumbers('player_walk', { start: 0, end: 5 }),
       frameRate: 10,
       repeat: -1
     });
+
     this.anims.create({
       key: 'jump',
       frames: this.anims.generateFrameNumbers('player_jump', { start: 0, end: 7 }),
@@ -76,12 +84,12 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.cursors.up.isDown) {
       if (onGround && !this.isJumping) {
-        this.player.setVelocityY(-300); // salto mínimo mais pequeno
+        this.player.setVelocityY(-300);
         this.isJumping = true;
         this.jumpTimer = 0;
         this.player.anims.play('jump', true);
       } else if (this.isJumping && this.jumpTimer < this.jumpMaxTime) {
-        this.player.setVelocityY(-500); // salto máximo mais pequeno
+        this.player.setVelocityY(-500);
         this.jumpTimer += this.game.loop.delta;
       }
     } else {
