@@ -4,18 +4,32 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
-    // Plataforma base
-    this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(400, 450, null)
-      .setDisplaySize(800, 20)
-      .setVisible(false)
-      .refreshBody();
+    // Fundo
+    this.add.rectangle(400, 225, 800, 450, 0x1a1a2e);
+
+    // Plataformas
+    const ground = this.add.rectangle(400, 430, 800, 20, 0x4a9eff);
+    this.physics.add.existing(ground, true);
+
+    const p1 = this.add.rectangle(150, 330, 180, 20, 0x4a9eff);
+    this.physics.add.existing(p1, true);
+
+    const p2 = this.add.rectangle(450, 250, 180, 20, 0x4a9eff);
+    this.physics.add.existing(p2, true);
+
+    const p3 = this.add.rectangle(200, 160, 180, 20, 0x4a9eff);
+    this.physics.add.existing(p3, true);
 
     // Jogador
     this.player = this.physics.add.sprite(100, 380, 'player_idle');
     this.player.setBounce(0.1);
     this.player.setCollideWorldBounds(true);
     this.player.setScale(2);
+    this.player.body.setSize(20, 26);
+    this.player.body.setOffset(6, 6);
+    this.isJumping = false;
+    this.jumpTimer = 0;
+    this.jumpMaxTime = 200;
 
     // Animações
     this.anims.create({
@@ -39,8 +53,11 @@ export default class GameScene extends Phaser.Scene {
       repeat: 0
     });
 
-    // Colisão jogador com plataforma
-    this.physics.add.collider(this.player, this.platforms);
+    // Colisões
+    this.physics.add.collider(this.player, ground);
+    this.physics.add.collider(this.player, p1);
+    this.physics.add.collider(this.player, p2);
+    this.physics.add.collider(this.player, p3);
 
     // Input
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -48,6 +65,20 @@ export default class GameScene extends Phaser.Scene {
 
   update() {
     const onGround = this.player.body.blocked.down;
+
+    if (this.cursors.up.isDown) {
+      if (onGround && !this.isJumping) {
+        this.player.setVelocityY(-300); // salto mínimo mais pequeno
+        this.isJumping = true;
+        this.jumpTimer = 0;
+        this.player.anims.play('jump', true);
+      } else if (this.isJumping && this.jumpTimer < this.jumpMaxTime) {
+        this.player.setVelocityY(-500); // salto máximo mais pequeno
+        this.jumpTimer += this.game.loop.delta;
+      }
+    } else {
+      this.isJumping = false;
+    }
 
     if (this.cursors.left.isDown) {
       this.player.setVelocityX(-200);
@@ -60,11 +91,6 @@ export default class GameScene extends Phaser.Scene {
     } else {
       this.player.setVelocityX(0);
       if (onGround) this.player.anims.play('idle', true);
-    }
-
-    if (this.cursors.up.isDown && onGround) {
-      this.player.setVelocityY(-400);
-      this.player.anims.play('jump', true);
     }
   }
 }

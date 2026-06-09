@@ -7,9 +7,14 @@ const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 450,
+  backgroundColor: '#1a1a2e',
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
   physics: {
     default: 'arcade',
-    arcade: { gravity: { y: 300 }, debug: false }
+    arcade: { gravity: { y: 1200 }, debug: true }
   },
   scene: [PreloadScene, MenuScene, GameScene, GameOverScene]
 };
