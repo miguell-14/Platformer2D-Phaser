@@ -20,9 +20,17 @@ export default class GameScene extends Phaser.Scene {
     // Tilemap
     const map = this.make.tilemap({ key: 'level1' });
     const tileset = map.addTilesetImage('Tileset', 'tiles', 16, 16, 1, 2);
+
+    const decorativeRocksLayer = map.createLayer('DecorativeRocks', tileset, 0, 0);
+    decorativeRocksLayer.setScale(2);
+
+    
     const groundLayer = map.createLayer('Ground', tileset, 0, 0);
     groundLayer.setScale(2);
     groundLayer.setCollisionByProperty({ collides: true });
+    
+    const backgroundLayer = map.createLayer('Background', tileset, 0, 0);
+    backgroundLayer.setScale(2);
 
     // Bounds
     this.physics.world.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
@@ -49,10 +57,7 @@ export default class GameScene extends Phaser.Scene {
       if (tile.properties && tile.properties.oneWay) {
         return player.body.velocity.y > 0;
       }
-      if (tile.properties && tile.properties.collides) {
-        return true;
-      }
-      return false;
+      return true;
     });
 
     // Câmara
