@@ -19,7 +19,7 @@
     "openFiles": [
     ],
     "project": "phaser.tiled-project",
-    "property.type": "bool",
+    "property.type": "string",
     "recentFiles": [
         "Tileset.tsx"
     ],
