@@ -32,6 +32,7 @@ export default class GameScene extends Phaser.Scene {
     const backgroundLayer = map.createLayer('Background', tileset, 0, 0);
     backgroundLayer.setScale(2);
 
+
     // Bounds
     this.physics.world.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
     this.cameras.main.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
@@ -43,6 +44,25 @@ export default class GameScene extends Phaser.Scene {
     this.player.setScale(2);
     this.player.body.setSize(14, 28);
     this.player.body.setOffset(9, 4);
+
+    // Objeto de entrada da caverna
+    const objectLayer = map.getObjectLayer('Objects');
+    const caveEntry = objectLayer.objects.find(o => o.name === 'caveEntry');
+
+    this.caveZone = this.add.zone(
+      caveEntry.x * 2,
+      caveEntry.y * 2,
+      caveEntry.width * 2,
+      caveEntry.height * 2
+    );
+    this.physics.world.enable(this.caveZone, Phaser.Physics.Arcade.STATIC_BODY);
+
+    this.physics.add.overlap(this.player, this.caveZone, () => {
+      if (!this.enteringCave) {
+        this.enteringCave = true;
+        this.startCaveEntry();
+      }
+    });
 
     // Dust effect
     this.dustEffect = this.add.sprite(0, 0, 'dust');
@@ -143,6 +163,7 @@ export default class GameScene extends Phaser.Scene {
     this.dashSpeed = 800;
     this.dashCooldown = 0;
     this.dashCooldownTime = 800;
+    this.enteringCave = false;
 
     // Evento fim de animação
     this.player.on('animationcomplete', (anim) => {
@@ -152,10 +173,35 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  startCaveEntry() {
+    this.cameras.main.stopFollow();
+    this.input.keyboard.enabled = false;
+
+    this.player.setVelocityX(70);
+    this.player.setFlipX(false);
+    this.player.anims.play('walk', true);
+
+    this.tweens.add({
+      targets: this.player,
+      alpha: 0,
+      duration: 3250,
+      delay: 500,
+      onComplete: () => {
+        this.cameras.main.fade(800, 0, 0, 0, false, (camera, progress) => {
+          if (progress === 1) {
+            this.scene.start('GameOverScene');
+          }
+        });
+      }
+    });
+  }
+
   update() {
     const onGround = this.player.body.blocked.down;
     const isRunning = this.shiftKey.isDown;
     const speed = isRunning ? 320 : 200;
+
+    if (this.enteringCave) return;
 
     // Cooldown do dash
     if (this.dashCooldown > 0) {
