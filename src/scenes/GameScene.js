@@ -170,8 +170,21 @@ export default class GameScene extends Phaser.Scene {
       coin.anims.play('coin-spin');
     });
 
+    this.coinCount = 0;
+    this.add.image(20, 20, 'coins', 48)
+      .setScrollFactor(0).setDepth(10).setScale(2).setOrigin(0, 0);
+    this.coinText = this.add.text(60, 28, '0', {
+      fontSize: '16px',
+      fill: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setScrollFactor(0).setDepth(10);
+
     this.physics.add.overlap(this.player, this.coins, (player, coin) => {
       coin.destroy();
+      this.coinSfx.play();
+      this.coinCount++;
+      this.coinText.setText(this.coinCount);
     });
 
     // Input
@@ -200,6 +213,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.music = this.sound.add('level1-theme', { loop: true, volume: 0.5 });
     this.deathSfx = this.sound.add('death-sfx');
+    this.coinSfx = this.sound.add('coin-sfx', {volume: 0.4});
 
     this.spawnPlayer();
 

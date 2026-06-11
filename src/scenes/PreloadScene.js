@@ -34,6 +34,7 @@ export default class PreloadScene extends Phaser.Scene {
     // Audio
     this.load.audio('level1-theme', 'assets/audio/level1-theme.mp3');
     this.load.audio('death-sfx', 'assets/audio/death-soudeffect.mp3');
+    this.load.audio('coin-sfx', 'assets/audio/coin-soundeffect.mp3');
 
     // Backgrounds
     this.load.image('bg_sky', 'assets/images/tiles/CloudsBack.png');
