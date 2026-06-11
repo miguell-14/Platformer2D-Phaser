@@ -1,0 +1,66 @@
+const strings = {
+  en: {
+    title: 'MY GAME',
+    pressStart: 'Press ENTER to start',
+    selectLevel: 'Select Level',
+    level1: 'Level 1',
+    level2: 'Level 2',
+    pressPlay: 'Press ENTER to play',
+    settings: 'Settings',
+    volume: 'Volume',
+    language: 'Language',
+    close: 'Close',
+    save: 'Save',
+    back: 'Back',
+    hintMove: 'Move',
+    hintJump: 'Jump',
+    hintRun: 'Run',
+    hintHighJump: 'Hold to jump higher',
+  },
+  pt: {
+    title: 'O MEU JOGO',
+    pressStart: 'Prima ENTER para começar',
+    selectLevel: 'Selecionar Nível',
+    level1: 'Nível 1',
+    level2: 'Nível 2',
+    pressPlay: 'Prima ENTER para entrar',
+    settings: 'Definições',
+    volume: 'Volume',
+    language: 'Idioma',
+    close: 'Fechar',
+    save: 'Guardar',
+    back: 'Voltar',
+    hintMove: 'Mover',
+    hintJump: 'Saltar',
+    hintRun: 'Correr',
+    hintHighJump: 'Segura p/ subir mais',
+  },
+  es: {
+    title: 'MI JUEGO',
+    pressStart: 'Pulsa ENTER para comenzar',
+    selectLevel: 'Seleccionar Nivel',
+    level1: 'Nivel 1',
+    level2: 'Nivel 2',
+    pressPlay: 'Pulsa ENTER para jugar',
+    settings: 'Ajustes',
+    volume: 'Volumen',
+    language: 'Idioma',
+    close: 'Cerrar',
+    save: 'Guardar',
+    back: 'Volver',
+    hintMove: 'Mover',
+    hintJump: 'Saltar',
+    hintRun: 'Correr',
+    hintHighJump: 'Mantén para subir más',
+  }
+};
+
+export const locale = {
+  lang: 'en',
+  t(key) {
+    return strings[this.lang][key] ?? key;
+  },
+  setLang(lang) {
+    this.lang = lang;
+  }
+};

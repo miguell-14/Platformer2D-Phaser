@@ -1,3 +1,5 @@
+import { locale } from '../locale.js';
+
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameScene' });
@@ -283,10 +285,10 @@ export default class GameScene extends Phaser.Scene {
 
   setupTutorialHints() {
     const hints = [
-      { triggerX: 99999, x: 256,  y: 416, keys: ['←', '→'],   label: 'Mover' },
-      { triggerX: 750,   x: 864,  y: 416, keys: ['↑'],         label: 'Saltar' },
-      { triggerX: 3350, x: 3488, y: 224, keys: ['⇧', '←/→'], label: 'Correr' },
-      { triggerX: 1400, x: 1504, y: 352, keys: ['↑'],         label: 'Segura p/ subir mais' },
+      { triggerX: 99999, x: 256,  y: 416, keys: ['←', '→'],   label: locale.t('hintMove') },
+      { triggerX: 750,   x: 864,  y: 416, keys: ['↑'],         label: locale.t('hintJump') },
+      { triggerX: 3350, x: 3488, y: 224, keys: ['⇧', '←/→'], label: locale.t('hintRun') },
+      { triggerX: 1400, x: 1504, y: 352, keys: ['↑'],         label: locale.t('hintHighJump') },
     ];
 
     this.tutorialTriggers = hints.map(h => {
