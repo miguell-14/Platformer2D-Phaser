@@ -7,12 +7,13 @@ export default class GameScene extends Phaser.Scene {
 
   init(data) {
     this.lives = data.lives !== undefined ? data.lives : 3;
+    this.isFirstEntry = data.lives === undefined;
   }
 
   create() {
     const width = this.scale.width;
     const height = this.scale.height;
-    this.cameras.main.fadeIn(700, 0, 0, 0);
+    if (!this.isFirstEntry) this.cameras.main.fadeIn(700, 0, 0, 0);
 
     // Backgrounds
     this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0, 0).setScrollFactor(0);
@@ -54,7 +55,7 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
 
     // Jogador
-    this.player = this.physics.add.sprite(0, 512, 'player_idle');
+    this.player = this.physics.add.sprite(0, 512, 'player_idle').setAlpha(0);
     this.player.setBounce(0.1);
     this.player.setCollideWorldBounds(true);
     this.player.setScale(2);
@@ -234,6 +235,7 @@ export default class GameScene extends Phaser.Scene {
     this.coinSfx = this.sound.add('coin-sfx', {volume: 0.4});
 
     this.createPauseMenu();
+    if (this.isFirstEntry) this.showLevelIntro();
 
     this.input.keyboard.on('keydown-ESC', () => {
       const onGround = this.player.body.blocked.down;
@@ -245,12 +247,46 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    this.spawnPlayer();
+    if (!this.isFirstEntry) this.spawnPlayer();
 
     // Evento fim de animação
     this.player.on('animationcomplete', (anim) => {
       if (anim.key === 'attack' || anim.key === 'walkattack') {
         this.isAttacking = false;
+      }
+    });
+  }
+
+  showLevelIntro() {
+    const cx = 400, cy = 225;
+    const overlay = this.add.rectangle(cx, cy, 800, 450, 0x000000, 1)
+      .setScrollFactor(0).setDepth(50);
+    const text = this.add.text(cx, cy, locale.t('level1'), {
+      fontSize: '48px',
+      fill: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 6
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setAlpha(0);
+
+    this.tweens.add({
+      targets: text,
+      alpha: 1,
+      duration: 400,
+      ease: 'Power2',
+      onComplete: () => {
+        this.time.delayedCall(1000, () => {
+          this.tweens.add({
+            targets: [overlay, text],
+            alpha: 0,
+            duration: 500,
+            ease: 'Power2',
+            onComplete: () => {
+              overlay.destroy();
+              text.destroy();
+              this.spawnPlayer();
+            }
+          });
+        });
       }
     });
   }
@@ -440,13 +476,32 @@ export default class GameScene extends Phaser.Scene {
     this.deathSfx.play();
     this.player.anims.play('death', true);
     this.player.once('animationcomplete', () => {
-      this.cameras.main.fade(1400, 0, 0, 0, false, (cam, progress) => {
-        if (progress === 1) {
-          if (this.lives - 1 < 0) {
-            this.scene.start('GameOverScene');
-          } else {
-            this.scene.restart({ lives: this.lives - 1 });
-          }
+      if (this.lives - 1 < 0) {
+        this.scene.start('GameOverScene');
+        return;
+      }
+
+      const remainingLives = this.lives - 1;
+      const cx = 400, cy = 225;
+
+      const deathOverlay = this.add.rectangle(cx, cy, 800, 450, 0x000000, 1)
+        .setScrollFactor(0).setDepth(58).setAlpha(0);
+      const deathIcon = this.add.image(cx - 30, cy, 'player_idle', 0)
+        .setScrollFactor(0).setDepth(60).setDisplaySize(48, 48).setOrigin(1, 0.5).setAlpha(0);
+      const deathText = this.add.text(cx - 14, cy, 'x' + remainingLives, {
+        fontSize: '32px', fill: '#ffffff',
+        stroke: '#000000', strokeThickness: 4
+      }).setScrollFactor(0).setDepth(60).setOrigin(0, 0.5).setAlpha(0);
+
+      this.tweens.add({
+        targets: [deathOverlay, deathIcon, deathText],
+        alpha: 1,
+        duration: 800,
+        ease: 'Linear',
+        onComplete: () => {
+          this.time.delayedCall(2500, () => {
+            this.scene.restart({ lives: remainingLives });
+          });
         }
       });
     });
