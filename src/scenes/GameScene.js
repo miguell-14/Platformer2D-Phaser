@@ -154,6 +154,25 @@ export default class GameScene extends Phaser.Scene {
       frameRate: 16,
       repeat: -1  // repete enquanto o dash durar
     });
+    this.anims.create({
+      key: 'coin-spin',
+      frames: this.anims.generateFrameNumbers('coins', { start: 48, end: 59 }),
+      frameRate: 12,
+      repeat: -1
+    });
+
+    // Moedas
+    this.coins = this.physics.add.staticGroup();
+    objectLayer.objects.filter(o => o.name === 'coin').forEach(coinObj => {
+      const coin = this.coins.create(coinObj.x * 2 + 16, coinObj.y * 2 - 16, 'coins');
+      coin.setScale(2);
+      coin.refreshBody();
+      coin.anims.play('coin-spin');
+    });
+
+    this.physics.add.overlap(this.player, this.coins, (player, coin) => {
+      coin.destroy();
+    });
 
     // Input
     this.cursors = this.input.keyboard.createCursorKeys();

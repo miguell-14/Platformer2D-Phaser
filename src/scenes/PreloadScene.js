@@ -29,6 +29,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.tilemapTiledJSON('level1', 'assets/level1.json');
     this.load.image('tiles', 'assets/images/tiles/Tileset-extruded.png');
     this.load.image('trees', 'assets/images/tiles/Trees.png');
+    this.load.spritesheet('coins', 'assets/images/tiles/coins.png', { frameWidth: 16, frameHeight: 16 });
 
     // Audio
     this.load.audio('level1-theme', 'assets/audio/level1-theme.mp3');
