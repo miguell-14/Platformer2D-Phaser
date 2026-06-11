@@ -227,8 +227,8 @@ export default class GameScene extends Phaser.Scene {
     this.isDead = false;
     this.isSpawning = true;
     this.isPaused = false;
-    this.attackEnabled = false;
-    this.dashEnabled = false;
+    this.attackEnabled = true;
+    this.dashEnabled = true;
 
     this.music = this.sound.add('level1-theme', { loop: true, volume: 0.5 });
     this.deathSfx = this.sound.add('death-sfx');
@@ -521,12 +521,58 @@ export default class GameScene extends Phaser.Scene {
       duration: 3250,
       delay: 500,
       onComplete: () => {
-        this.cameras.main.fade(800, 0, 0, 0, false, (camera, progress) => {
-          if (progress === 1) {
-            this.scene.start('GameOverScene');
-          }
-        });
+        this.showLevelComplete();
       }
+    });
+  }
+
+  showLevelComplete() {
+    const prev = JSON.parse(localStorage.getItem('level1') || '{}');
+    const best = Math.max(prev.coins || 0, this.coinCount);
+    localStorage.setItem('level1', JSON.stringify({ completed: true, coins: best }));
+
+    const cx = 400, cy = 225;
+
+    const dimOverlay = this.add.rectangle(cx, cy, 800, 450, 0x000000, 0)
+      .setScrollFactor(0).setDepth(50);
+    const panel = this.add.rectangle(cx, cy, 420, 260, 0x1a1a2e, 0)
+      .setScrollFactor(0).setDepth(51).setStrokeStyle(2, 0x4444bb);
+
+    const title = this.add.text(cx, cy - 85, locale.t('levelComplete'), {
+      fontSize: '34px', fill: '#ffdd00',
+      stroke: '#000000', strokeThickness: 5
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(52).setAlpha(0);
+
+    const coinIcon = this.add.image(cx - 68, cy - 10, 'coins', 48)
+      .setScrollFactor(0).setDepth(52).setScale(2).setOrigin(0.5).setAlpha(0);
+    const coinLabel = this.add.text(cx - 40, cy - 10, `${this.coinCount} / 44`, {
+      fontSize: '24px', fill: '#ffffff', stroke: '#000000', strokeThickness: 3
+    }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(52).setAlpha(0);
+
+    const menuBtn = this.add.text(cx - 80, cy + 80, locale.t('mainMenu'), {
+      fontSize: '17px', fill: '#ffffff',
+      backgroundColor: '#2a2a44', padding: { x: 16, y: 9 }
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(52).setAlpha(0).setInteractive();
+
+    const contBtn = this.add.text(cx + 80, cy + 80, locale.t('continueBtn'), {
+      fontSize: '17px', fill: '#555555',
+      backgroundColor: '#111122', padding: { x: 16, y: 9 }
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(52).setAlpha(0);
+
+    menuBtn.on('pointerover', () => menuBtn.setStyle({ backgroundColor: '#3a3a66' }));
+    menuBtn.on('pointerout', () => menuBtn.setStyle({ backgroundColor: '#2a2a44' }));
+    menuBtn.on('pointerdown', () => {
+      this.cameras.main.fade(400, 0, 0, 0, false, (cam, progress) => {
+        if (progress === 1) this.scene.start('LevelSelectScene');
+      });
+    });
+
+    this.tweens.add({
+      targets: [dimOverlay, panel, title, coinIcon, coinLabel, menuBtn, contBtn],
+      alpha: { from: 0, to: 1 },
+      duration: 700,
+      ease: 'Power2',
+      onStart: () => { dimOverlay.setFillStyle(0x000000, 0.75); panel.setFillStyle(0x1a1a2e, 1); }
     });
   }
 

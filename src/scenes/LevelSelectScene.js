@@ -39,24 +39,36 @@ export default class LevelSelectScene extends Phaser.Scene {
 
     this.cards = levels.map((level, i) => {
       const cx = cardPositions[i];
+      const save = JSON.parse(localStorage.getItem(level.key) || '{}');
 
       const bg = this.add.rectangle(cx, cardY, cardW, cardH, 0x1a1a2e);
       const border = this.add.rectangle(cx, cardY, cardW, cardH)
         .setStrokeStyle(3, level.unlocked ? 0x4444bb : 0x333355).setFillStyle();
 
-      const label = this.add.text(cx, cardY - 20, locale.t(level.key), {
+      const label = this.add.text(cx, cardY - 50, locale.t(level.key), {
         fontSize: '24px',
         fill: level.unlocked ? '#ffffff' : '#555555',
         stroke: '#000000',
         strokeThickness: 3
       }).setOrigin(0.5);
 
-      let lockText = null;
-      if (!level.unlocked) {
-        const lockOverlay = this.add.rectangle(cx, cardY, cardW, cardH, 0x000000, 0.5);
-        lockText = this.add.text(cx, cardY + 30, '🔒', {
-          fontSize: '36px'
+      if (save.completed) {
+        this.add.text(cx, cardY - 10, locale.t('completed'), {
+          fontSize: '14px', fill: '#44ff44',
+          stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
+
+        this.add.image(cx - 45, cardY + 30, 'coins', 48)
+          .setScale(2).setOrigin(0.5);
+        this.add.text(cx - 20, cardY + 30, `${save.coins} / 44`, {
+          fontSize: '16px', fill: '#ffffff',
+          stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0, 0.5);
+      }
+
+      if (!level.unlocked) {
+        this.add.rectangle(cx, cardY, cardW, cardH, 0x000000, 0.5);
+        this.add.text(cx, cardY + 30, '🔒', { fontSize: '36px' }).setOrigin(0.5);
       }
 
       if (level.unlocked) {
