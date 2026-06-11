@@ -162,7 +162,7 @@ export default class GameScene extends Phaser.Scene {
     // Estado do jogador
     this.isJumping = false;
     this.jumpTimer = 0;
-    this.jumpMaxTime = 350;
+    this.jumpMaxTime = 100;
     this.isAttacking = false;
     this.wasRunning = false;
     this.isDashing = false;
@@ -395,19 +395,20 @@ export default class GameScene extends Phaser.Scene {
     // Salto
     if (this.cursors.up.isDown) {
       if (onGround && !this.isJumping) {
-        this.player.setVelocityY(-700);
+        this.player.setVelocityY(-350);
         this.wasRunning = isRunning;
         this.isJumping = true;
         this.jumpTimer = 0;
         if (!this.isAttacking) this.player.anims.play('jump', true);
       } else if (this.isJumping && this.jumpTimer < this.jumpMaxTime) {
-        const progress = this.jumpTimer / this.jumpMaxTime;
-        const jumpForce = Phaser.Math.Linear(-250, -80, progress);
-        this.player.setVelocityY(jumpForce);
+        this.player.body.setGravityY(-900);
         this.jumpTimer += this.game.loop.delta;
+      } else if (this.isJumping) {
+        this.player.body.setGravityY(0);
       }
     } else {
       if (this.isJumping) {
+        this.player.body.setGravityY(0);
         this.player.setVelocityY(this.player.body.velocity.y * 0.5);
       }
       this.isJumping = false;
