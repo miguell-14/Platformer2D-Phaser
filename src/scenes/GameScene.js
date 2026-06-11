@@ -11,11 +11,11 @@ export default class GameScene extends Phaser.Scene {
     this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0, 0).setScrollFactor(0);
     this.bgSky.setDisplaySize(width, height);
 
-    this.bgMountains = this.add.image(0, 0, 'bg_mountains').setOrigin(0, 1).setScrollFactor(0.1);
-    this.bgMountains.y = height;
+    this.bgMountains = this.add.tileSprite(0, height, width, 320, 'bg_mountains')
+      .setOrigin(0, 1).setScrollFactor(0);
 
-    this.bgFront = this.add.image(0, 0, 'bg_front').setOrigin(0, 1).setScrollFactor(0.2);
-    this.bgFront.y = height;
+    this.bgFront = this.add.tileSprite(0, height, width, 320, 'bg_front')
+      .setOrigin(0, 1).setScrollFactor(0);
 
     // Tutorial hints (added before tile layers so they render behind them)
     this.setupTutorialHints();
@@ -43,6 +43,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Bounds
     this.physics.world.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
+    this.physics.world.setBoundsCollision(true, true, true, false);
     this.cameras.main.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
 
     // Jogador
@@ -172,6 +173,7 @@ export default class GameScene extends Phaser.Scene {
     this.dashCooldown = 0;
     this.dashCooldownTime = 800;
     this.enteringCave = false;
+    this.isDead = false;
     this.isSpawning = true;
     this.attackEnabled = false;
     this.dashEnabled = false;
@@ -309,6 +311,18 @@ export default class GameScene extends Phaser.Scene {
     return container;
   }
 
+  triggerDeath() {
+    this.isDead = true;
+    this.input.keyboard.enabled = false;
+    this.player.setVelocityX(0);
+    this.player.anims.play('death', true);
+    this.player.once('animationcomplete', () => {
+      this.cameras.main.fade(600, 0, 0, 0, false, (cam, progress) => {
+        if (progress === 1) this.scene.restart();
+      });
+    });
+  }
+
   startCaveEntry() {
     this.cameras.main.stopFollow();
     this.input.keyboard.enabled = false;
@@ -337,7 +351,15 @@ export default class GameScene extends Phaser.Scene {
     const isRunning = this.shiftKey.isDown;
     const speed = isRunning ? 320 : 200;
 
-    if (this.enteringCave || this.isSpawning) return;
+    this.bgMountains.tilePositionX = this.cameras.main.scrollX * 0.1;
+    this.bgFront.tilePositionX = this.cameras.main.scrollX * 0.2;
+
+    if (this.enteringCave || this.isSpawning || this.isDead) return;
+
+    if (this.player.y > 680) {
+      this.triggerDeath();
+      return;
+    }
 
     // Tutorial hints
     this.tutorialTriggers.forEach(hint => {
