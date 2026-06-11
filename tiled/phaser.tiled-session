@@ -11,18 +11,28 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "Trees.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "level1.tmx#Tileset": {
             "scaleInEditor": 1
         }
     },
     "last.externalTilesetPath": "/Users/miguelmiranda/Platformer2D-Phaser/assets/images/tiles",
+    "last.imagePath": "/Users/miguelmiranda/Platformer2D-Phaser/assets/images/tiles",
     "openFiles": [
     ],
     "project": "phaser.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "Trees.tsx",
         "Tileset.tsx"
     ],
     "tileset.lastUsedFilter": "Todos os Ficheiros (*)",
-    "tileset.lastUsedFormat": "tsx"
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
 }
