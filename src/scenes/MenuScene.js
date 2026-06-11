@@ -15,7 +15,7 @@ export default class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.input.keyboard.once('keydown-ENTER', () => {
-      this.scene.start('GameScene');
+      this.scene.start('LevelSelectScene');
     });
   }
 }

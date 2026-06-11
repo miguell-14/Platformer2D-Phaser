@@ -1,5 +1,6 @@
 import PreloadScene from './scenes/PreloadScene.js';
 import MenuScene from './scenes/MenuScene.js';
+import LevelSelectScene from './scenes/LevelSelectScene.js';
 import GameScene from './scenes/GameScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
 
@@ -17,7 +18,7 @@ const config = {
     default: 'arcade',
     arcade: { gravity: { y: 800 }, debug: false }
   },
-  scene: [PreloadScene, MenuScene, GameScene, GameOverScene]
+  scene: [PreloadScene, MenuScene, LevelSelectScene, GameScene, GameOverScene]
 };
 
 const game = new Phaser.Game(config);
