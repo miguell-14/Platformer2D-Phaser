@@ -1,11 +1,19 @@
+import { locale } from '../locale.js';
+
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameScene' });
   }
 
+  init(data) {
+    this.lives = data.lives !== undefined ? data.lives : 3;
+    this.isFirstEntry = data.lives === undefined;
+  }
+
   create() {
     const width = this.scale.width;
     const height = this.scale.height;
+    if (!this.isFirstEntry) this.cameras.main.fadeIn(700, 0, 0, 0);
 
     // Backgrounds
     this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0, 0).setScrollFactor(0);
@@ -47,7 +55,7 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
 
     // Jogador
-    this.player = this.physics.add.sprite(0, 512, 'player_idle');
+    this.player = this.physics.add.sprite(0, 512, 'player_idle').setAlpha(0);
     this.player.setBounce(0.1);
     this.player.setCollideWorldBounds(true);
     this.player.setScale(2);
@@ -153,6 +161,49 @@ export default class GameScene extends Phaser.Scene {
       frameRate: 16,
       repeat: -1  // repete enquanto o dash durar
     });
+    this.anims.create({
+      key: 'coin-spin',
+      frames: this.anims.generateFrameNumbers('coins', { start: 48, end: 59 }),
+      frameRate: 12,
+      repeat: -1
+    });
+
+    // Moedas
+    this.coins = this.physics.add.staticGroup();
+    objectLayer.objects.filter(o => o.name === 'coin').forEach(coinObj => {
+      const coin = this.coins.create(coinObj.x * 2 + 16, coinObj.y * 2 - 16, 'coins');
+      coin.setScale(2);
+      coin.refreshBody();
+      coin.anims.play('coin-spin');
+    });
+
+    // Lives UI
+    this.add.image(20, 16, 'player_idle', 0)
+      .setScrollFactor(0).setDepth(10).setDisplaySize(32, 32).setOrigin(0, 0);
+    this.livesText = this.add.text(60, 24, 'x' + this.lives, {
+      fontSize: '16px',
+      fill: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setScrollFactor(0).setDepth(10);
+
+    // Coins UI
+    this.coinCount = 0;
+    this.add.image(20, 58, 'coins', 48)
+      .setScrollFactor(0).setDepth(10).setScale(2).setOrigin(0, 0);
+    this.coinText = this.add.text(60, 66, '0', {
+      fontSize: '16px',
+      fill: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setScrollFactor(0).setDepth(10);
+
+    this.physics.add.overlap(this.player, this.coins, (player, coin) => {
+      coin.destroy();
+      this.coinSfx.play();
+      this.coinCount++;
+      this.coinText.setText(this.coinCount);
+    });
 
     // Input
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -175,10 +226,28 @@ export default class GameScene extends Phaser.Scene {
     this.enteringCave = false;
     this.isDead = false;
     this.isSpawning = true;
+    this.isPaused = false;
     this.attackEnabled = false;
     this.dashEnabled = false;
 
-    this.spawnPlayer();
+    this.music = this.sound.add('level1-theme', { loop: true, volume: 0.5 });
+    this.deathSfx = this.sound.add('death-sfx');
+    this.coinSfx = this.sound.add('coin-sfx', {volume: 0.4});
+
+    this.createPauseMenu();
+    if (this.isFirstEntry) this.showLevelIntro();
+
+    this.input.keyboard.on('keydown-ESC', () => {
+      const onGround = this.player.body.blocked.down;
+      if (!onGround || this.isSpawning || this.isDead || this.enteringCave) return;
+      if (this.isPaused) {
+        this.resumeGame();
+      } else {
+        this.pauseGame();
+      }
+    });
+
+    if (!this.isFirstEntry) this.spawnPlayer();
 
     // Evento fim de animação
     this.player.on('animationcomplete', (anim) => {
@@ -188,6 +257,93 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  showLevelIntro() {
+    const cx = 400, cy = 225;
+    const overlay = this.add.rectangle(cx, cy, 800, 450, 0x000000, 1)
+      .setScrollFactor(0).setDepth(50);
+    const text = this.add.text(cx, cy, locale.t('level1'), {
+      fontSize: '48px',
+      fill: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 6
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setAlpha(0);
+
+    this.tweens.add({
+      targets: text,
+      alpha: 1,
+      duration: 400,
+      ease: 'Power2',
+      onComplete: () => {
+        this.time.delayedCall(1000, () => {
+          this.tweens.add({
+            targets: [overlay, text],
+            alpha: 0,
+            duration: 500,
+            ease: 'Power2',
+            onComplete: () => {
+              overlay.destroy();
+              text.destroy();
+              this.spawnPlayer();
+            }
+          });
+        });
+      }
+    });
+  }
+
+  createPauseMenu() {
+    const cx = 400, cy = 225;
+    const panelW = 280, panelH = 200;
+
+    this.pauseMenu = this.add.container(0, 0).setDepth(30).setVisible(false).setScrollFactor(0);
+
+    const overlay = this.add.rectangle(cx, cy, 800, 450, 0x000000, 0.6).setScrollFactor(0);
+    const panel = this.add.rectangle(cx, cy, panelW, panelH, 0x1a1a2e).setStrokeStyle(2, 0x4444bb).setScrollFactor(0);
+
+    const title = this.add.text(cx, cy - 65, locale.t('paused'), {
+      fontSize: '28px', fill: '#ffffff'
+    }).setOrigin(0.5).setScrollFactor(0);
+
+    const resumeBtn = this.add.text(cx, cy - 10, locale.t('resume'), {
+      fontSize: '20px', fill: '#ffffff',
+      backgroundColor: '#2a2a44',
+      padding: { x: 24, y: 10 }
+    }).setOrigin(0.5).setInteractive().setScrollFactor(0);
+
+    resumeBtn.on('pointerover', () => resumeBtn.setStyle({ backgroundColor: '#3a3a66' }));
+    resumeBtn.on('pointerout', () => resumeBtn.setStyle({ backgroundColor: '#2a2a44' }));
+    resumeBtn.on('pointerdown', () => this.resumeGame());
+
+    const menuBtn = this.add.text(cx, cy + 50, locale.t('mainMenu'), {
+      fontSize: '20px', fill: '#ffffff',
+      backgroundColor: '#2a2a44',
+      padding: { x: 24, y: 10 }
+    }).setOrigin(0.5).setInteractive().setScrollFactor(0);
+
+    menuBtn.on('pointerover', () => menuBtn.setStyle({ backgroundColor: '#3a3a66' }));
+    menuBtn.on('pointerout', () => menuBtn.setStyle({ backgroundColor: '#2a2a44' }));
+    menuBtn.on('pointerdown', () => {
+      this.music.stop();
+      this.scene.start('LevelSelectScene');
+    });
+
+    this.pauseMenu.add([overlay, panel, title, resumeBtn, menuBtn]);
+  }
+
+  pauseGame() {
+    this.isPaused = true;
+    this.physics.pause();
+    this.music.pause();
+    this.pauseMenu.setVisible(true);
+  }
+
+  resumeGame() {
+    this.isPaused = false;
+    this.physics.resume();
+    this.music.resume();
+    this.pauseMenu.setVisible(false);
+  }
+
   spawnPlayer() {
     this.input.keyboard.enabled = false;
     this.player.setCollideWorldBounds(false);
@@ -195,6 +351,7 @@ export default class GameScene extends Phaser.Scene {
     this.player.setAlpha(0);
     this.player.setVelocityX(60);
     this.player.anims.play('walk', true);
+    this.music.play();
 
     this.tweens.add({
       targets: this.player,
@@ -245,10 +402,10 @@ export default class GameScene extends Phaser.Scene {
 
   setupTutorialHints() {
     const hints = [
-      { triggerX: 99999, x: 256,  y: 416, keys: ['←', '→'],   label: 'Mover' },
-      { triggerX: 750,   x: 864,  y: 416, keys: ['↑'],         label: 'Saltar' },
-      { triggerX: 3350, x: 3488, y: 224, keys: ['⇧', '←/→'], label: 'Correr' },
-      { triggerX: 1400, x: 1504, y: 352, keys: ['↑'],         label: 'Segura p/ subir mais' },
+      { triggerX: 99999, x: 256,  y: 416, keys: ['←', '→'],   label: locale.t('hintMove') },
+      { triggerX: 750,   x: 864,  y: 416, keys: ['↑'],         label: locale.t('hintJump') },
+      { triggerX: 3350, x: 3488, y: 224, keys: ['⇧', '←/→'], label: locale.t('hintRun') },
+      { triggerX: 1400, x: 1504, y: 352, keys: ['↑'],         label: locale.t('hintHighJump') },
     ];
 
     this.tutorialTriggers = hints.map(h => {
@@ -315,10 +472,37 @@ export default class GameScene extends Phaser.Scene {
     this.isDead = true;
     this.input.keyboard.enabled = false;
     this.player.setVelocityX(0);
+    this.music.stop();
+    this.deathSfx.play();
     this.player.anims.play('death', true);
     this.player.once('animationcomplete', () => {
-      this.cameras.main.fade(600, 0, 0, 0, false, (cam, progress) => {
-        if (progress === 1) this.scene.restart();
+      if (this.lives - 1 < 0) {
+        this.scene.start('GameOverScene');
+        return;
+      }
+
+      const remainingLives = this.lives - 1;
+      const cx = 400, cy = 225;
+
+      const deathOverlay = this.add.rectangle(cx, cy, 800, 450, 0x000000, 1)
+        .setScrollFactor(0).setDepth(58).setAlpha(0);
+      const deathIcon = this.add.image(cx - 30, cy, 'player_idle', 0)
+        .setScrollFactor(0).setDepth(60).setDisplaySize(48, 48).setOrigin(1, 0.5).setAlpha(0);
+      const deathText = this.add.text(cx - 14, cy, 'x' + remainingLives, {
+        fontSize: '32px', fill: '#ffffff',
+        stroke: '#000000', strokeThickness: 4
+      }).setScrollFactor(0).setDepth(60).setOrigin(0, 0.5).setAlpha(0);
+
+      this.tweens.add({
+        targets: [deathOverlay, deathIcon, deathText],
+        alpha: 1,
+        duration: 800,
+        ease: 'Linear',
+        onComplete: () => {
+          this.time.delayedCall(2500, () => {
+            this.scene.restart({ lives: remainingLives });
+          });
+        }
       });
     });
   }

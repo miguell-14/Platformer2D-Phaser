@@ -7,12 +7,19 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "Coins.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "Tileset.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
         "Trees.tsx": {
             "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "level1.tmx#Coins": {
             "scaleInEditor": 1
         },
         "level1.tmx#Tileset": {
@@ -26,6 +33,7 @@
     "project": "phaser.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "Coins.tsx",
         "Trees.tsx",
         "Tileset.tsx"
     ],
