@@ -5,6 +5,10 @@ export default class GameScene extends Phaser.Scene {
     super({ key: 'GameScene' });
   }
 
+  init(data) {
+    this.lives = data.lives !== undefined ? data.lives : 3;
+  }
+
   create() {
     const width = this.scale.width;
     const height = this.scale.height;
@@ -172,10 +176,21 @@ export default class GameScene extends Phaser.Scene {
       coin.anims.play('coin-spin');
     });
 
+    // Lives UI
+    this.add.image(20, 16, 'player_idle', 0)
+      .setScrollFactor(0).setDepth(10).setDisplaySize(32, 32).setOrigin(0, 0);
+    this.livesText = this.add.text(60, 24, 'x' + this.lives, {
+      fontSize: '16px',
+      fill: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setScrollFactor(0).setDepth(10);
+
+    // Coins UI
     this.coinCount = 0;
-    this.add.image(20, 20, 'coins', 48)
+    this.add.image(20, 58, 'coins', 48)
       .setScrollFactor(0).setDepth(10).setScale(2).setOrigin(0, 0);
-    this.coinText = this.add.text(60, 28, '0', {
+    this.coinText = this.add.text(60, 66, '0', {
       fontSize: '16px',
       fill: '#ffffff',
       stroke: '#000000',
@@ -210,12 +225,25 @@ export default class GameScene extends Phaser.Scene {
     this.enteringCave = false;
     this.isDead = false;
     this.isSpawning = true;
+    this.isPaused = false;
     this.attackEnabled = false;
     this.dashEnabled = false;
 
     this.music = this.sound.add('level1-theme', { loop: true, volume: 0.5 });
     this.deathSfx = this.sound.add('death-sfx');
     this.coinSfx = this.sound.add('coin-sfx', {volume: 0.4});
+
+    this.createPauseMenu();
+
+    this.input.keyboard.on('keydown-ESC', () => {
+      const onGround = this.player.body.blocked.down;
+      if (!onGround || this.isSpawning || this.isDead || this.enteringCave) return;
+      if (this.isPaused) {
+        this.resumeGame();
+      } else {
+        this.pauseGame();
+      }
+    });
 
     this.spawnPlayer();
 
@@ -225,6 +253,59 @@ export default class GameScene extends Phaser.Scene {
         this.isAttacking = false;
       }
     });
+  }
+
+  createPauseMenu() {
+    const cx = 400, cy = 225;
+    const panelW = 280, panelH = 200;
+
+    this.pauseMenu = this.add.container(0, 0).setDepth(30).setVisible(false).setScrollFactor(0);
+
+    const overlay = this.add.rectangle(cx, cy, 800, 450, 0x000000, 0.6).setScrollFactor(0);
+    const panel = this.add.rectangle(cx, cy, panelW, panelH, 0x1a1a2e).setStrokeStyle(2, 0x4444bb).setScrollFactor(0);
+
+    const title = this.add.text(cx, cy - 65, locale.t('paused'), {
+      fontSize: '28px', fill: '#ffffff'
+    }).setOrigin(0.5).setScrollFactor(0);
+
+    const resumeBtn = this.add.text(cx, cy - 10, locale.t('resume'), {
+      fontSize: '20px', fill: '#ffffff',
+      backgroundColor: '#2a2a44',
+      padding: { x: 24, y: 10 }
+    }).setOrigin(0.5).setInteractive().setScrollFactor(0);
+
+    resumeBtn.on('pointerover', () => resumeBtn.setStyle({ backgroundColor: '#3a3a66' }));
+    resumeBtn.on('pointerout', () => resumeBtn.setStyle({ backgroundColor: '#2a2a44' }));
+    resumeBtn.on('pointerdown', () => this.resumeGame());
+
+    const menuBtn = this.add.text(cx, cy + 50, locale.t('mainMenu'), {
+      fontSize: '20px', fill: '#ffffff',
+      backgroundColor: '#2a2a44',
+      padding: { x: 24, y: 10 }
+    }).setOrigin(0.5).setInteractive().setScrollFactor(0);
+
+    menuBtn.on('pointerover', () => menuBtn.setStyle({ backgroundColor: '#3a3a66' }));
+    menuBtn.on('pointerout', () => menuBtn.setStyle({ backgroundColor: '#2a2a44' }));
+    menuBtn.on('pointerdown', () => {
+      this.music.stop();
+      this.scene.start('LevelSelectScene');
+    });
+
+    this.pauseMenu.add([overlay, panel, title, resumeBtn, menuBtn]);
+  }
+
+  pauseGame() {
+    this.isPaused = true;
+    this.physics.pause();
+    this.music.pause();
+    this.pauseMenu.setVisible(true);
+  }
+
+  resumeGame() {
+    this.isPaused = false;
+    this.physics.resume();
+    this.music.resume();
+    this.pauseMenu.setVisible(false);
   }
 
   spawnPlayer() {
@@ -359,8 +440,14 @@ export default class GameScene extends Phaser.Scene {
     this.deathSfx.play();
     this.player.anims.play('death', true);
     this.player.once('animationcomplete', () => {
-      this.cameras.main.fade(700, 0, 0, 0, false, (cam, progress) => {
-        if (progress === 1) this.scene.restart();
+      this.cameras.main.fade(1400, 0, 0, 0, false, (cam, progress) => {
+        if (progress === 1) {
+          if (this.lives - 1 < 0) {
+            this.scene.start('GameOverScene');
+          } else {
+            this.scene.restart({ lives: this.lives - 1 });
+          }
+        }
       });
     });
   }

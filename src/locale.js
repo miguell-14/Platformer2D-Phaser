@@ -16,6 +16,9 @@ const strings = {
     hintJump: 'Jump',
     hintRun: 'Run',
     hintHighJump: 'Hold to jump higher',
+    paused: 'Paused',
+    resume: 'Resume',
+    mainMenu: 'Main Menu',
   },
   pt: {
     title: 'O MEU JOGO',
@@ -34,6 +37,9 @@ const strings = {
     hintJump: 'Saltar',
     hintRun: 'Correr',
     hintHighJump: 'Segura p/ subir mais',
+    paused: 'Pausado',
+    resume: 'Continuar',
+    mainMenu: 'Menu Principal',
   },
   es: {
     title: 'MI JUEGO',
@@ -52,6 +58,9 @@ const strings = {
     hintJump: 'Saltar',
     hintRun: 'Correr',
     hintHighJump: 'Mantén para subir más',
+    paused: 'Pausado',
+    resume: 'Continuar',
+    mainMenu: 'Menú Principal',
   }
 };
 
