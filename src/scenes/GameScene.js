@@ -6,6 +6,7 @@ export default class GameScene extends Phaser.Scene {
   create() {
     const width = this.scale.width;
     const height = this.scale.height;
+    this.cameras.main.fadeIn(700, 0, 0, 0);
 
     // Backgrounds
     this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0, 0).setScrollFactor(0);
@@ -178,6 +179,9 @@ export default class GameScene extends Phaser.Scene {
     this.attackEnabled = false;
     this.dashEnabled = false;
 
+    this.music = this.sound.add('level1-theme', { loop: true, volume: 0.5 });
+    this.deathSfx = this.sound.add('death-sfx');
+
     this.spawnPlayer();
 
     // Evento fim de animação
@@ -195,6 +199,7 @@ export default class GameScene extends Phaser.Scene {
     this.player.setAlpha(0);
     this.player.setVelocityX(60);
     this.player.anims.play('walk', true);
+    this.music.play();
 
     this.tweens.add({
       targets: this.player,
@@ -315,9 +320,11 @@ export default class GameScene extends Phaser.Scene {
     this.isDead = true;
     this.input.keyboard.enabled = false;
     this.player.setVelocityX(0);
+    this.music.stop();
+    this.deathSfx.play();
     this.player.anims.play('death', true);
     this.player.once('animationcomplete', () => {
-      this.cameras.main.fade(600, 0, 0, 0, false, (cam, progress) => {
+      this.cameras.main.fade(700, 0, 0, 0, false, (cam, progress) => {
         if (progress === 1) this.scene.restart();
       });
     });

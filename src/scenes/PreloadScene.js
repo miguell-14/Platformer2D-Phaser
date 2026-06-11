@@ -30,6 +30,10 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.image('tiles', 'assets/images/tiles/Tileset-extruded.png');
     this.load.image('trees', 'assets/images/tiles/Trees.png');
 
+    // Audio
+    this.load.audio('level1-theme', 'assets/audio/level1-theme.mp3');
+    this.load.audio('death-sfx', 'assets/audio/death-soudeffect.mp3');
+
     // Backgrounds
     this.load.image('bg_sky', 'assets/images/tiles/CloudsBack.png');
     this.load.image('bg_mountains', 'assets/images/tiles/BGBack.png');
