@@ -11,6 +11,16 @@ export default class MenuScene extends Phaser.Scene {
     const cx = width / 2;
     this.cameras.main.fadeIn(600, 0, 0, 0);
 
+    const existing = this.sound.get('menu-music');
+    if (existing && existing.isPlaying && existing.volume >= 0.5) {
+      this.menuMusic = existing;
+    } else {
+      if (existing) existing.destroy();
+      this.menuMusic = this.sound.add('menu-music', { loop: true, volume: 0 });
+      this.menuMusic.play();
+      this.tweens.add({ targets: this.menuMusic, volume: 0.6, duration: 1500, ease: 'Linear' });
+    }
+
     this.add.image(0, 0, 'bg_sky').setOrigin(0, 0).setDisplaySize(width, height);
     this.bgMountains = this.add.tileSprite(0, height, width, 320, 'bg_mountains').setOrigin(0, 1);
     this.bgFront = this.add.tileSprite(0, height, width, 320, 'bg_front').setOrigin(0, 1);
