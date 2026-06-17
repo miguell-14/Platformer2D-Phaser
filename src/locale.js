@@ -19,6 +19,9 @@ const strings = {
     paused: 'Paused',
     resume: 'Resume',
     mainMenu: 'Main Menu',
+    levelComplete: 'Level Complete',
+    continueBtn: 'Continue',
+    completed: 'Complete',
   },
   pt: {
     title: 'O MEU JOGO',
@@ -40,6 +43,9 @@ const strings = {
     paused: 'Pausado',
     resume: 'Continuar',
     mainMenu: 'Menu Principal',
+    levelComplete: 'Nível Completo',
+    continueBtn: 'Continuar',
+    completed: 'Completo',
   },
   es: {
     title: 'MI JUEGO',
@@ -61,6 +67,9 @@ const strings = {
     paused: 'Pausado',
     resume: 'Continuar',
     mainMenu: 'Menú Principal',
+    levelComplete: 'Nivel Completado',
+    continueBtn: 'Continuar',
+    completed: 'Completado',
   }
 };
 
