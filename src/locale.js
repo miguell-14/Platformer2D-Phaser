@@ -1,6 +1,6 @@
 const strings = {
   en: {
-    title: 'MY GAME',
+    title: 'Blue Bubble',
     pressStart: 'Press ENTER to start',
     selectLevel: 'Select Level',
     level1: 'Level 1',
@@ -24,7 +24,7 @@ const strings = {
     completed: 'Complete',
   },
   pt: {
-    title: 'O MEU JOGO',
+    title: 'Blue Bubble',
     pressStart: 'Prima ENTER para começar',
     selectLevel: 'Selecionar Nível',
     level1: 'Nível 1',
@@ -48,7 +48,7 @@ const strings = {
     completed: 'Completo',
   },
   es: {
-    title: 'MI JUEGO',
+    title: 'Blue Bubble',
     pressStart: 'Pulsa ENTER para comenzar',
     selectLevel: 'Seleccionar Nivel',
     level1: 'Nivel 1',
