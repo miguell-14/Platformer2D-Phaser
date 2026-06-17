@@ -562,8 +562,16 @@ export default class GameScene extends Phaser.Scene {
     menuBtn.on('pointerover', () => menuBtn.setStyle({ backgroundColor: '#3a3a66' }));
     menuBtn.on('pointerout', () => menuBtn.setStyle({ backgroundColor: '#2a2a44' }));
     menuBtn.on('pointerdown', () => {
+      this.tweens.add({
+        targets: this.music,
+        volume: 0,
+        duration: 400
+      });
       this.cameras.main.fade(400, 0, 0, 0, false, (cam, progress) => {
-        if (progress === 1) this.scene.start('LevelSelectScene');
+        if (progress === 1) {
+          this.music.stop();
+          this.scene.start('LevelSelectScene');
+        }
       });
     });
 
