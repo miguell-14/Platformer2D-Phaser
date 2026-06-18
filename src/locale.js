@@ -22,6 +22,7 @@ const strings = {
     levelComplete: 'Level Complete',
     continueBtn: 'Continue',
     completed: 'Complete',
+    navigate: '← →  navigate',
   },
   pt: {
     title: 'Blue Bubble',
@@ -46,6 +47,7 @@ const strings = {
     levelComplete: 'Nível Completo',
     continueBtn: 'Continuar',
     completed: 'Completo',
+    navigate: '← →  navegar',
   },
   es: {
     title: 'Blue Bubble',
@@ -70,6 +72,7 @@ const strings = {
     levelComplete: 'Nivel Completado',
     continueBtn: 'Continuar',
     completed: 'Completado',
+    navigate: '← →  navegar',
   }
 };
 

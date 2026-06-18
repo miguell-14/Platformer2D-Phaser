@@ -107,7 +107,7 @@ export default class LevelSelectScene extends Phaser.Scene {
       strokeThickness: 3
     }).setOrigin(0.5);
 
-    this.add.text(400, 415, '← →  navigate', {
+    this.add.text(400, 415, locale.t('navigate'), {
       fontSize: '13px',
       fill: '#666666'
     }).setOrigin(0.5);
