@@ -241,6 +241,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     this.createPauseMenu();
+    this.createPauseButton();
     if (this.isFirstEntry) this.showLevelIntro();
 
     this.input.keyboard.on('keydown-ESC', () => {
@@ -293,6 +294,25 @@ export default class GameScene extends Phaser.Scene {
             }
           });
         });
+      }
+    });
+  }
+
+  createPauseButton() {
+    const bg = this.add.rectangle(771, 20, 34, 28, 0x000000, 0.5)
+      .setScrollFactor(0).setDepth(10).setInteractive();
+    const icon = this.add.text(771, 20, '❚❚', {
+      fontSize: '13px', fill: '#ffffff'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(11);
+
+    bg.on('pointerover', () => bg.setFillStyle(0x333333, 0.8));
+    bg.on('pointerout', () => bg.setFillStyle(0x000000, 0.5));
+    bg.on('pointerdown', () => {
+      if (this.isSpawning || this.isDead || this.enteringCave) return;
+      if (this.isPaused) {
+        this.resumeGame();
+      } else {
+        this.pauseGame();
       }
     });
   }
