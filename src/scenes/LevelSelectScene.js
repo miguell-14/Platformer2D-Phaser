@@ -10,6 +10,16 @@ export default class LevelSelectScene extends Phaser.Scene {
     const height = this.scale.height;
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
+    const menuMusic = this.sound.get('menu-music');
+    if (menuMusic && menuMusic.isPlaying && menuMusic.volume >= 0.5) {
+      // já a tocar normalmente (vindo do menu), não faz nada
+    } else {
+      if (menuMusic) menuMusic.destroy();
+      const music = this.sound.add('menu-music', { loop: true, volume: 0 });
+      music.play();
+      this.tweens.add({ targets: music, volume: 0.6, duration: 1000, ease: 'Linear' });
+    }
+
     // Background
     this.add.image(0, 0, 'bg_sky').setOrigin(0, 0).setDisplaySize(width, height);
     this.add.tileSprite(0, height, width, 320, 'bg_mountains').setOrigin(0, 1);

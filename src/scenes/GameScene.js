@@ -234,6 +234,12 @@ export default class GameScene extends Phaser.Scene {
     this.deathSfx = this.sound.add('death-sfx');
     this.coinSfx = this.sound.add('coin-sfx', {volume: 0.4});
 
+    const menuMusic = this.sound.get('menu-music');
+    if (menuMusic && menuMusic.isPlaying) {
+      this.tweens.add({ targets: menuMusic, volume: 0, duration: 800, ease: 'Linear',
+        onComplete: () => menuMusic.stop() });
+    }
+
     this.createPauseMenu();
     if (this.isFirstEntry) this.showLevelIntro();
 
