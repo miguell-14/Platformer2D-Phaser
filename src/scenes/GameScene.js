@@ -631,9 +631,10 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.enteringCave || this.isSpawning || this.isDead) return;
 
-    if (!this.timerActive) this.timerActive = true;
+    if (!this.timerActive && (this.cursors.left.isDown || this.cursors.right.isDown))
+      this.timerActive = true;
 
-    if (!this.isPaused) {
+    if (!this.isPaused && this.timerActive) {
       this.timerElapsed += delta;
       if (this.timerElapsed >= 1000) {
         this.timerElapsed -= 1000;
