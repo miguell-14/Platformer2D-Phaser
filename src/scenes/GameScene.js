@@ -205,6 +205,17 @@ export default class GameScene extends Phaser.Scene {
       this.coinText.setText(this.coinCount);
     });
 
+    // Timer
+    this.timeRemaining = 100;
+    this.timerElapsed = 0;
+    this.timerActive = false;
+    this.timerText = this.add.text(771, 42, '100', {
+      fontSize: '14px',
+      fill: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(10);
+
     // Input
     this.cursors = this.input.keyboard.createCursorKeys();
     this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
@@ -610,7 +621,7 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  update() {
+  update(time, delta) {
     const onGround = this.player.body.blocked.down;
     const isRunning = this.shiftKey.isDown;
     const speed = isRunning ? 320 : 200;
@@ -619,6 +630,24 @@ export default class GameScene extends Phaser.Scene {
     this.bgFront.tilePositionX = this.cameras.main.scrollX * 0.2;
 
     if (this.enteringCave || this.isSpawning || this.isDead) return;
+
+    if (!this.timerActive) this.timerActive = true;
+
+    if (!this.isPaused) {
+      this.timerElapsed += delta;
+      if (this.timerElapsed >= 1000) {
+        this.timerElapsed -= 1000;
+        this.timeRemaining = Math.max(0, this.timeRemaining - 1);
+        this.timerText.setText(this.timeRemaining);
+        if (this.timeRemaining <= 10) {
+          this.timerText.setStyle({ fontSize: '14px', fill: '#ff4444', stroke: '#000000', strokeThickness: 3 });
+        }
+        if (this.timeRemaining <= 0) {
+          this.timerActive = false;
+          this.triggerDeath();
+        }
+      }
+    }
 
     if (this.player.y > 680) {
       this.triggerDeath();
