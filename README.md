@@ -123,7 +123,7 @@ Os assets foram escolhidos por serem gratuitos, de fácil integração com o Pha
 
 ## GitHub Pages
 
-https://miguell-14.github.io/Platformer2D-Phaser/
+https://miguell-14.github.io/Blue-Bubble/
 
 ---
 
