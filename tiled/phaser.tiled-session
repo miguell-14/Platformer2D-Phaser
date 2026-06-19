@@ -11,6 +11,10 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "DungeonTileset.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "Tileset.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
@@ -19,20 +23,63 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "level1.tmx": {
+            "scale": 1.3707,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 3346.465309695776,
+                "y": 145.9108484715839
+            }
+        },
         "level1.tmx#Coins": {
+            "scaleInDock": 1,
             "scaleInEditor": 1
         },
         "level1.tmx#Tileset": {
+            "scaleInDock": 1,
             "scaleInEditor": 1
+        },
+        "level1.tmx#Trees": {
+            "scaleInDock": 1
+        },
+        "level2.tmx": {
+            "expandedObjectLayers": [
+                7
+            ],
+            "scale": 1.1857,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 435.60765792358944,
+                "y": 152.2307497680695
+            }
+        },
+        "level2.tmx#Coins": {
+            "scaleInDock": 1
+        },
+        "level2.tmx#DungeonTileset": {
+            "scaleInDock": 1.8585,
+            "scaleInEditor": 1
+        },
+        "level2.tmx#Tileset": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "level2.tmx#Trees": {
+            "scaleInDock": 1
         }
     },
+    "last.exportedFilePath": "/Users/miguelmiranda/Platformer2D-Phaser/assets",
     "last.externalTilesetPath": "/Users/miguelmiranda/Platformer2D-Phaser/assets/images/tiles",
     "last.imagePath": "/Users/miguelmiranda/Platformer2D-Phaser/assets/images/tiles",
+    "map.lastUsedExportFilter": "Ficheiros de mapa JSON (*.tmj *.json)",
     "openFiles": [
     ],
     "project": "phaser.tiled-project",
-    "property.type": "string",
+    "property.type": "bool",
     "recentFiles": [
+        "level2.tmx",
+        "level1.tmx",
+        "DungeonTileset.tsx",
         "Coins.tsx",
         "Trees.tsx",
         "Tileset.tsx"

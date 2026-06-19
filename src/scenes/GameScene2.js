@@ -1,17 +1,19 @@
 import { locale } from '../locale.js';
 
-export default class GameScene extends Phaser.Scene {
+export default class GameScene2 extends Phaser.Scene {
   constructor() {
-    // Inicializa a cena do nível 1
-    super({ key: 'GameScene' });
+    // Inicializa a cena do nível 2
+    super({ key: 'GameScene2' });
   }
 
   init(data) {
+    // Recebe dados entre cenas, como as vidas restantes
     this.lives = data.lives !== undefined ? data.lives : 3;
     this.isFirstEntry = data.lives === undefined;
   }
 
   create() {
+    // Constroi e inicializa todos os elementos do nivel 2
     const width = this.scale.width;
     const height = this.scale.height;
     if (!this.isFirstEntry) this.cameras.main.fadeIn(700, 0, 0, 0);
@@ -26,28 +28,24 @@ export default class GameScene extends Phaser.Scene {
     this.bgFront = this.add.tileSprite(0, height, width, 320, 'bg_front')
       .setOrigin(0, 1).setScrollFactor(0);
 
-    this.setupTutorialHints();
-
     // Tilemap
-    const map = this.make.tilemap({ key: 'level1' });
-    const tileset = map.addTilesetImage('Tileset', 'tiles', 16, 16, 1, 2);
+    const map = this.make.tilemap({ key: 'level2' });
+    const tileset = map.addTilesetImage('Tileset', 'tiles-plain', 16, 16);
     const treesTileset = map.addTilesetImage('Trees', 'trees', 16, 16);
+    const coinsTileset = map.addTilesetImage('Coins', 'coins', 16, 16);
+    const dungeonTileset = map.addTilesetImage('DungeonTileset', 'dungeon-tiles', 16, 16);
 
-    const decorativeRocksLayer = map.createLayer('DecorativeRocks', tileset, 0, 0);
-    decorativeRocksLayer.setScale(2);
+    const allTilesets = [tileset, treesTileset, coinsTileset, dungeonTileset];
 
-    if (map.getLayer('Trees')) {
-      map.createLayer('Trees', treesTileset, 0, 0).setScale(2);
-    }
-
-    
-    const groundLayer = map.createLayer('Ground', tileset, 0, 0);
-    groundLayer.setScale(2);
-    groundLayer.setCollisionByProperty({ collides: true });
-    
-    const backgroundLayer = map.createLayer('Background', [tileset, treesTileset], 0, 0);
+    const backgroundLayer = map.createLayer('Background', allTilesets, 0, 0);
     backgroundLayer.setScale(2);
 
+    const decorativeRocksLayer = map.createLayer('DecorativeRocks', allTilesets, 0, 0);
+    decorativeRocksLayer.setScale(2);
+
+    const groundLayer = map.createLayer('Ground', allTilesets, 0, 0);
+    groundLayer.setScale(2);
+    groundLayer.setCollisionByExclusion([-1]);
 
     // Bounds
     this.physics.world.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
@@ -62,7 +60,7 @@ export default class GameScene extends Phaser.Scene {
     this.player.body.setSize(14, 28);
     this.player.body.setOffset(9, 4);
 
-    // Objeto de entrada da caverna
+    // Objeto de saída
     const objectLayer = map.getObjectLayer('Objects');
     const caveEntry = objectLayer.objects.find(o => o.name === 'caveEntry');
 
@@ -90,7 +88,14 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // Colisão
-    this.physics.add.collider(this.player, groundLayer, null, (player, tile) => {
+    this.physics.add.collider(this.player, groundLayer, (player, tile) => {
+      if (tile.properties && tile.properties.deadly && !this.isDead) {
+        this.triggerDeath();
+      }
+      if (this.isDashing && tile.properties && tile.properties.breakable) {
+        this.breakWall(groundLayer, tile.x, tile.y);
+      }
+    }, (player, tile) => {
       if (tile.properties && tile.properties.oneWay) {
         return player.body.velocity.y > 0;
       }
@@ -119,7 +124,6 @@ export default class GameScene extends Phaser.Scene {
       this.anims.create({ key: 'dust', frames: this.anims.generateFrameNumbers('dust', { start: 0, end: 5 }), frameRate: 16, repeat: -1 });
     if (!this.anims.exists('coin-spin'))
       this.anims.create({ key: 'coin-spin', frames: this.anims.generateFrameNumbers('coins', { start: 48, end: 59 }), frameRate: 12, repeat: -1 });
-
     // Moedas
     this.coins = this.physics.add.staticGroup();
     objectLayer.objects.filter(o => o.name === 'coin').forEach(coinObj => {
@@ -128,6 +132,42 @@ export default class GameScene extends Phaser.Scene {
       coin.refreshBody();
       coin.anims.play('coin-spin');
     });
+
+    // Plataformas moveis
+    const platGroups = {};
+    objectLayer.objects.filter(o => o.name === 'movingPlatform').forEach(obj => {
+      if (!platGroups[obj.y]) platGroups[obj.y] = [];
+      platGroups[obj.y].push(obj);
+    });
+
+    this.movingPlatforms = Object.values(platGroups).map(group => {
+      const minX = Math.min(...group.map(o => o.x)) * 2;
+      const maxX = (Math.max(...group.map(o => o.x)) + group[0].width) * 2;
+      const h = group[0].height * 2;
+      const w = maxX - minX;
+      const topY = (group[0].y - group[0].height) * 2;
+      const cy = topY + h / 2;
+      const tileFrame = group[0].gid - 333;
+
+      const visuals = group.map(obj =>
+        this.add.image((obj.x + obj.width / 2) * 2, cy, 'dungeon-sheet', tileFrame).setScale(2)
+      );
+
+      const plat = this.add.rectangle(minX + w / 2, cy, w, h).setAlpha(0);
+      this.physics.add.existing(plat, true);
+
+      this.physics.add.collider(this.player, plat, null, () => {
+        return this.player.body.velocity.y >= 0 &&
+               this.player.body.bottom <= plat.body.top + 8;
+      });
+
+      return { sprite: plat, visuals, startY: cy, speed: 60 };
+    });
+
+    const cys = this.movingPlatforms.map(p => p.startY);
+    const spacing = 128;
+    this.platTopBound = Math.min(...cys) - spacing / 2;
+    this.platBottomBound = Math.max(...cys) + spacing;
 
     // Lives UI
     this.add.image(20, 16, 'player_idle', 0)
@@ -188,11 +228,11 @@ export default class GameScene extends Phaser.Scene {
     this.isDead = false;
     this.isSpawning = true;
     this.isPaused = false;
-    this.dashEnabled = false;
+    this.dashEnabled = true;
 
-    this.music = this.sound.add('level1-theme', { loop: true, volume: 0.5 });
+    this.music = this.sound.add('level2-theme', { loop: true, volume: 0.5 });
     this.deathSfx = this.sound.add('death-sfx');
-    this.coinSfx = this.sound.add('coin-sfx', {volume: 0.4});
+    this.coinSfx = this.sound.add('coin-sfx', { volume: 0.4 });
 
     const menuMusic = this.sound.get('menu-music');
     if (menuMusic && menuMusic.isPlaying) {
@@ -200,6 +240,7 @@ export default class GameScene extends Phaser.Scene {
         onComplete: () => menuMusic.stop() });
     }
 
+    this.setupDashHint();
     this.createPauseMenu();
     this.createPauseButton();
     if (this.isFirstEntry) this.showLevelIntro();
@@ -222,7 +263,7 @@ export default class GameScene extends Phaser.Scene {
     const cx = 400, cy = 225;
     const overlay = this.add.rectangle(cx, cy, 800, 450, 0x000000, 1)
       .setScrollFactor(0).setDepth(50);
-    const text = this.add.text(cx, cy, locale.t('level1'), {
+    const text = this.add.text(cx, cy, locale.t('level2'), {
       fontSize: '48px',
       fill: '#ffffff',
       stroke: '#000000',
@@ -345,107 +386,9 @@ export default class GameScene extends Phaser.Scene {
           this.player.setVelocityX(0);
           this.player.anims.play('idle', true);
           this.input.keyboard.enabled = true;
-          const moverHint = this.tutorialTriggers[0];
-          moverHint.shown = true;
-          this.showHint(moverHint.container);
         });
       }
     });
-  }
-
-  showHint(container) {
-    this.tweens.add({
-      targets: container,
-      alpha: 1,
-      duration: 400,
-      ease: 'Power2',
-      onComplete: () => {
-        this.tweens.add({
-          targets: container,
-          y: container.y - 8,
-          duration: 1200,
-          yoyo: true,
-          repeat: 2,
-          ease: 'Sine.easeInOut',
-        });
-        this.time.delayedCall(4200, () => {
-          this.tweens.add({
-            targets: container,
-            alpha: 0,
-            duration: 600,
-            ease: 'Power2',
-          });
-        });
-      }
-    });
-  }
-
-  setupTutorialHints() {
-    const hints = [
-      { triggerX: 99999, x: 256,  y: 416, keys: ['←', '→'],   label: locale.t('hintMove') },
-      { triggerX: 750,   x: 864,  y: 416, keys: ['↑'],         label: locale.t('hintJump') },
-      { triggerX: 3350, x: 3488, y: 224, keys: ['⇧', '←/→'], label: locale.t('hintRun') },
-      { triggerX: 1400, x: 1504, y: 352, keys: ['↑'],         label: locale.t('hintHighJump') },
-    ];
-
-    this.tutorialTriggers = hints.map(h => {
-      const container = this.createKeyPrompt(h.x, h.y, h.keys, h.label);
-      return { triggerX: h.triggerX, container, shown: false };
-    });
-  }
-
-  createKeyPrompt(x, y, keys, label) {
-    const container = this.add.container(x, y);
-    const kw = 40, kh = 36, gap = 8;
-    const totalW = keys.length * kw + (keys.length - 1) * gap;
-
-    const panelPx = 16, panelPy = 10;
-    const panelW = Math.max(totalW, label.length * 10) + panelPx * 2;
-    const panelH = kh + 22 + panelPy * 2;
-
-    const panel = this.add.graphics();
-    panel.fillStyle(0x000000, 0.45);
-    panel.fillRoundedRect(-panelW / 2, -panelH / 2, panelW, panelH, 10);
-    container.add(panel);
-
-    const startX = -(totalW / 2) + kw / 2;
-    keys.forEach((label, i) => {
-      const kx = startX + i * (kw + gap);
-      const ky = -10;
-
-      const shadow = this.add.graphics();
-      shadow.fillStyle(0x333333, 0.8);
-      shadow.fillRoundedRect(kx - kw / 2 + 2, ky - kh / 2 + 4, kw, kh, 5);
-
-      const cap = this.add.graphics();
-      cap.fillStyle(0xeeeeee, 1);
-      cap.fillRoundedRect(kx - kw / 2, ky - kh / 2, kw, kh, 5);
-      cap.lineStyle(1.5, 0xaaaaaa, 1);
-      cap.strokeRoundedRect(kx - kw / 2, ky - kh / 2, kw, kh, 5);
-
-      const fontSize = label.length > 4 ? '9px' : label.length > 2 ? '11px' : '15px';
-      const keyText = this.add.text(kx, ky, label, {
-        fontFamily: 'monospace',
-        fontSize,
-        color: '#222222',
-        fontStyle: 'bold',
-      }).setOrigin(0.5);
-
-      container.add([shadow, cap, keyText]);
-    });
-
-    const labelText = this.add.text(0, kh / 2 + 5, label, {
-      fontFamily: 'Arial',
-      fontSize: '12px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5);
-    container.add(labelText);
-
-    container.setAlpha(0);
-    return container;
   }
 
   triggerDeath() {
@@ -507,9 +450,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   showLevelComplete() {
-    const prev = JSON.parse(localStorage.getItem('level1') || '{}');
+    const totalCoins = objectLayer => 44;
+    const prev = JSON.parse(localStorage.getItem('level2') || '{}');
     const best = Math.max(prev.coins || 0, this.coinCount);
-    localStorage.setItem('level1', JSON.stringify({ completed: true, coins: best }));
+    localStorage.setItem('level2', JSON.stringify({ completed: true, coins: best }));
 
     const cx = 400, cy = 225;
 
@@ -564,6 +508,137 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  setupDashHint() {
+    const tileSize = 16 * 2;
+    const hint = {
+      triggerX: 88 * tileSize - 200,
+      container: this.createKeyPrompt(88 * tileSize, 15 * tileSize, ['E'], locale.t('hintDash')),
+      shown: false
+    };
+    this.dashHint = hint;
+  }
+
+  showHint(container) {
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      duration: 400,
+      ease: 'Power2',
+      onComplete: () => {
+        this.tweens.add({
+          targets: container,
+          y: container.y - 8,
+          duration: 1200,
+          yoyo: true,
+          repeat: 2,
+          ease: 'Sine.easeInOut',
+        });
+        this.time.delayedCall(4200, () => {
+          this.tweens.add({ targets: container, alpha: 0, duration: 600, ease: 'Power2' });
+        });
+      }
+    });
+  }
+
+  createKeyPrompt(x, y, keys, label) {
+    const container = this.add.container(x, y);
+    const kw = 32, kh = 28, gap = 6;
+    const totalW = keys.length * kw + (keys.length - 1) * gap;
+    const maxLabelW = 90;
+
+    const panelPx = 12, panelPy = 8;
+    const panelW = Math.max(totalW, maxLabelW) + panelPx * 2;
+
+    const labelText = this.add.text(0, 0, label, {
+      fontFamily: 'Arial', fontSize: '11px',
+      color: '#ffffff', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 2,
+      wordWrap: { width: maxLabelW, useAdvancedWrap: true },
+      align: 'center'
+    }).setOrigin(0.5, 0);
+
+    const labelH = labelText.height;
+    const panelH = kh + labelH + 10 + panelPy * 2;
+
+    const panel = this.add.graphics();
+    panel.fillStyle(0x000000, 0.45);
+    panel.fillRoundedRect(-panelW / 2, -panelH / 2, panelW, panelH, 8);
+    container.add(panel);
+
+    const keyY = -panelH / 2 + panelPy + kh / 2;
+    const startX = -(totalW / 2) + kw / 2;
+    keys.forEach((keyLabel, i) => {
+      const kx = startX + i * (kw + gap);
+
+      const shadow = this.add.graphics();
+      shadow.fillStyle(0x333333, 0.8);
+      shadow.fillRoundedRect(kx - kw / 2 + 2, keyY - kh / 2 + 3, kw, kh, 4);
+
+      const cap = this.add.graphics();
+      cap.fillStyle(0xeeeeee, 1);
+      cap.fillRoundedRect(kx - kw / 2, keyY - kh / 2, kw, kh, 4);
+      cap.lineStyle(1.5, 0xaaaaaa, 1);
+      cap.strokeRoundedRect(kx - kw / 2, keyY - kh / 2, kw, kh, 4);
+
+      const fontSize = keyLabel.length > 4 ? '8px' : keyLabel.length > 2 ? '10px' : '13px';
+      const keyText = this.add.text(kx, keyY, keyLabel, {
+        fontFamily: 'monospace', fontSize,
+        color: '#222222', fontStyle: 'bold',
+      }).setOrigin(0.5);
+
+      container.add([shadow, cap, keyText]);
+    });
+
+    labelText.setPosition(0, keyY + kh / 2 + 6);
+    container.add(labelText);
+
+    container.setAlpha(0);
+    return container;
+  }
+
+  breakWall(layer, startX, startY) {
+    const queue = [{ x: startX, y: startY }];
+    const visited = new Set();
+    const broken = [];
+    while (queue.length > 0) {
+      const { x, y } = queue.shift();
+      const key = `${x},${y}`;
+      if (visited.has(key)) continue;
+      visited.add(key);
+      const tile = layer.getTileAt(x, y);
+      if (!tile || !tile.properties || !tile.properties.breakable) continue;
+      broken.push({ px: tile.pixelX * 2, py: tile.pixelY * 2 });
+      layer.removeTileAt(x, y);
+      queue.push({ x: x + 1, y }, { x: x - 1, y }, { x, y: y + 1 }, { x, y: y - 1 });
+    }
+
+    if (broken.length === 0) return;
+
+    this.cameras.main.shake(180, 0.008);
+
+    broken.forEach(({ px, py }) => {
+      for (let i = 0; i < 4; i++) {
+        const frag = this.add.rectangle(
+          px + Phaser.Math.Between(0, 32),
+          py + Phaser.Math.Between(0, 32),
+          Phaser.Math.Between(4, 10),
+          Phaser.Math.Between(4, 10),
+          0x8B6355
+        ).setDepth(5);
+
+        this.tweens.add({
+          targets: frag,
+          x: frag.x + Phaser.Math.Between(-40, 40),
+          y: frag.y + Phaser.Math.Between(-50, 10),
+          alpha: 0,
+          duration: Phaser.Math.Between(300, 600),
+          ease: 'Power2',
+          onComplete: () => frag.destroy()
+        });
+      }
+    });
+  }
+
   update(time, delta) {
     const onGround = this.player.body.blocked.down;
     const isRunning = this.shiftKey.isDown;
@@ -599,22 +674,42 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Tutorial hints
-    this.tutorialTriggers.forEach(hint => {
-      if (!hint.shown && this.player.x > hint.triggerX) {
-        hint.shown = true;
-        this.showHint(hint.container);
+    // Dica de dash
+    if (!this.dashHint.shown && this.player.y >= 15 * 16 * 2 && this.player.x > this.dashHint.triggerX) {
+      this.dashHint.shown = true;
+      this.showHint(this.dashHint.container);
+    }
+
+    // Plataformas
+    this.movingPlatforms.forEach(p => {
+      const prevY = p.sprite.y;
+      p.sprite.y -= p.speed * (delta / 1000);
+      const teleported = p.sprite.y < this.platTopBound;
+      if (teleported) {
+        p.sprite.y = this.platBottomBound;
+        p.visuals.forEach(v => { v.y = this.platBottomBound; });
+      } else {
+        const dy = p.sprite.y - prevY;
+        p.visuals.forEach(v => { v.y += dy; });
+
+        if (this.player.body.blocked.down) {
+          const pb = this.player.getBounds();
+          const platB = p.sprite.getBounds();
+          if (pb.right > platB.left && pb.left < platB.right &&
+              pb.bottom >= platB.top && pb.bottom <= platB.top + 8) {
+            this.player.y += dy;
+          }
+        }
       }
+      p.sprite.body.reset(p.sprite.x, p.sprite.y);
     });
 
     // Dash
     if (this.dashEnabled) {
-      // Cooldown do dash
       if (this.dashCooldown > 0) {
         this.dashCooldown -= this.game.loop.delta;
       }
 
-      // Dash
       if (Phaser.Input.Keyboard.JustDown(this.dashKey) && onGround && !this.isDashing && this.dashCooldown <= 0) {
         this.isDashing = true;
         this.dashTimer = 0;
@@ -629,7 +724,6 @@ export default class GameScene extends Phaser.Scene {
         this.dustEffect.anims.play('dust', true);
       }
 
-      // Durante o dash
       if (this.isDashing) {
         this.dustEffect.setPosition(this.player.x, this.player.y + 10);
         this.dashTimer += this.game.loop.delta;

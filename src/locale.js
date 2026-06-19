@@ -16,12 +16,14 @@ const strings = {
     hintJump: 'Jump',
     hintRun: 'Run',
     hintHighJump: 'Hold to jump higher',
+    hintDash: 'Dash to break the wall',
     paused: 'Paused',
     resume: 'Resume',
     mainMenu: 'Main Menu',
     levelComplete: 'Level Complete',
     continueBtn: 'Continue',
     completed: 'Complete',
+    navigate: '← →  navigate',
   },
   pt: {
     title: 'Blue Bubble',
@@ -40,12 +42,14 @@ const strings = {
     hintJump: 'Saltar',
     hintRun: 'Correr',
     hintHighJump: 'Segura p/ subir mais',
+    hintDash: 'Dash para partir a parede',
     paused: 'Pausado',
     resume: 'Continuar',
     mainMenu: 'Menu Principal',
     levelComplete: 'Nível Completo',
     continueBtn: 'Continuar',
     completed: 'Completo',
+    navigate: '← →  navegar',
   },
   es: {
     title: 'Blue Bubble',
@@ -64,21 +68,25 @@ const strings = {
     hintJump: 'Saltar',
     hintRun: 'Correr',
     hintHighJump: 'Mantén para subir más',
+    hintDash: 'Dash para romper la pared',
     paused: 'Pausado',
     resume: 'Continuar',
     mainMenu: 'Menú Principal',
     levelComplete: 'Nivel Completado',
     continueBtn: 'Continuar',
     completed: 'Completado',
+    navigate: '← →  navegar',
   }
 };
 
 export const locale = {
   lang: 'en',
   t(key) {
+    // Traduz uma chave para o idioma ativo
     return strings[this.lang][key] ?? key;
   },
   setLang(lang) {
+    // Define o idioma ativo
     this.lang = lang;
   }
 };
