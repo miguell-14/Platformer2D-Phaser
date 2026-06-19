@@ -32,6 +32,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.image('tiles-plain', 'assets/images/tiles/Tileset.png');
     this.load.image('trees', 'assets/images/tiles/Trees.png');
     this.load.image('dungeon-tiles', 'assets/images/tiles/Dungeon-tile-set.png');
+    this.load.spritesheet('dungeon-sheet', 'assets/images/tiles/Dungeon-tile-set.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('coins', 'assets/images/tiles/coins.png', { frameWidth: 16, frameHeight: 16 });
 
     // Flags

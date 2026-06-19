@@ -195,6 +195,42 @@ export default class GameScene2 extends Phaser.Scene {
         obj.height * 2
       ));
 
+    // Plataformas moveis
+    const platGroups = {};
+    objectLayer.objects.filter(o => o.name === 'movingPlatform').forEach(obj => {
+      if (!platGroups[obj.y]) platGroups[obj.y] = [];
+      platGroups[obj.y].push(obj);
+    });
+
+    this.movingPlatforms = Object.values(platGroups).map(group => {
+      const minX = Math.min(...group.map(o => o.x)) * 2;
+      const maxX = (Math.max(...group.map(o => o.x)) + group[0].width) * 2;
+      const h = group[0].height * 2;
+      const w = maxX - minX;
+      const topY = (group[0].y - group[0].height) * 2;
+      const cy = topY + h / 2;
+      const tileFrame = group[0].gid - 333;
+
+      const visuals = group.map(obj =>
+        this.add.image((obj.x + obj.width / 2) * 2, cy, 'dungeon-sheet', tileFrame).setScale(2)
+      );
+
+      const plat = this.add.rectangle(minX + w / 2, cy, w, h).setAlpha(0);
+      this.physics.add.existing(plat, true);
+
+      this.physics.add.collider(this.player, plat, null, () => {
+        return this.player.body.velocity.y >= 0 &&
+               this.player.body.bottom <= plat.body.top + 8;
+      });
+
+      return { sprite: plat, visuals, startY: cy, speed: 60 };
+    });
+
+    const cys = this.movingPlatforms.map(p => p.startY);
+    const spacing = 128;
+    this.platTopBound = Math.min(...cys) - spacing / 2;
+    this.platBottomBound = Math.max(...cys) + spacing;
+
     // Lives UI
     this.add.image(20, 16, 'player_idle', 0)
       .setScrollFactor(0).setDepth(10).setDisplaySize(32, 32).setOrigin(0, 0);
@@ -712,6 +748,30 @@ export default class GameScene2 extends Phaser.Scene {
       this.dashHint.shown = true;
       this.showHint(this.dashHint.container);
     }
+
+    // Plataformas
+    this.movingPlatforms.forEach(p => {
+      const prevY = p.sprite.y;
+      p.sprite.y -= p.speed * (delta / 1000);
+      const teleported = p.sprite.y < this.platTopBound;
+      if (teleported) {
+        p.sprite.y = this.platBottomBound;
+        p.visuals.forEach(v => { v.y = this.platBottomBound; });
+      } else {
+        const dy = p.sprite.y - prevY;
+        p.visuals.forEach(v => { v.y += dy; });
+
+        if (this.player.body.blocked.down) {
+          const pb = this.player.getBounds();
+          const platB = p.sprite.getBounds();
+          if (pb.right > platB.left && pb.left < platB.right &&
+              pb.bottom >= platB.top && pb.bottom <= platB.top + 8) {
+            this.player.y += dy;
+          }
+        }
+      }
+      p.sprite.body.reset(p.sprite.x, p.sprite.y);
+    });
 
     // Escada
     const playerBounds = this.player.getBounds();
