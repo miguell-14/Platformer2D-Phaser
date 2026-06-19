@@ -34,8 +34,8 @@ export default class LevelSelectScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     const levels = [
-      { key: 'level1', scene: 'GameScene', unlocked: true },
-      { key: 'level2', scene: 'GameScene2', unlocked: true },
+      { key: 'level1', scene: 'GameScene', unlocked: true, maxCoins: 44 },
+      { key: 'level2', scene: 'GameScene2', unlocked: true, maxCoins: 100 },
     ];
 
     this.selected = 0;
@@ -70,7 +70,7 @@ export default class LevelSelectScene extends Phaser.Scene {
 
         this.add.image(cx - 45, cardY + 30, 'coins', 48)
           .setScale(2).setOrigin(0.5);
-        this.add.text(cx - 20, cardY + 30, `${save.coins} / 44`, {
+        this.add.text(cx - 20, cardY + 30, `${save.coins} / ${level.maxCoins}`, {
           fontSize: '16px', fill: '#ffffff',
           stroke: '#000000', strokeThickness: 3
         }).setOrigin(0, 0.5);
