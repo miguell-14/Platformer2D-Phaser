@@ -86,6 +86,9 @@ export default class GameScene2 extends Phaser.Scene {
 
     // Colisão
     this.physics.add.collider(this.player, groundLayer, (player, tile) => {
+      if (tile.properties && tile.properties.deadly && !this.isDead) {
+        this.triggerDeath();
+      }
       if (this.isDashing && tile.properties && tile.properties.breakable) {
         this.breakWall(groundLayer, tile.x, tile.y);
       }
@@ -705,7 +708,7 @@ export default class GameScene2 extends Phaser.Scene {
       return;
     }
 
-    if (!this.dashHint.shown && this.player.x > this.dashHint.triggerX) {
+    if (!this.dashHint.shown && this.player.y >= 15 * 16 * 2 && this.player.x > this.dashHint.triggerX) {
       this.dashHint.shown = true;
       this.showHint(this.dashHint.container);
     }
