@@ -1,6 +1,6 @@
 # Blue Bubble
 
-![Logo do Jogo](screenshots/logo.png)
+<img src="screenshots/logo.png" alt="Logo do Jogo" width="600">
 
 Blue Bubble é um jogo de plataformas 2D em pixel art desenvolvido em Phaser 3 e JavaScript. O jogador percorre dois níveis, recolhe moedas, evita obstáculos e tenta chegar ao fim antes do tempo esgotar.
 
