@@ -2,6 +2,7 @@ import { locale } from '../locale.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
+    // Inicializa a cena do nível 1
     super({ key: 'GameScene' });
   }
 
@@ -25,7 +26,6 @@ export default class GameScene extends Phaser.Scene {
     this.bgFront = this.add.tileSprite(0, height, width, 320, 'bg_front')
       .setOrigin(0, 1).setScrollFactor(0);
 
-    // Tutorial hints (added before tile layers so they render behind them)
     this.setupTutorialHints();
 
     // Tilemap
@@ -101,72 +101,24 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player);
 
     // Animações
-    this.anims.create({
-      key: 'idle',
-      frames: this.anims.generateFrameNumbers('player_idle', { start: 0, end: 3 }),
-      frameRate: 8,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'walk',
-      frames: this.anims.generateFrameNumbers('player_walk', { start: 0, end: 5 }),
-      frameRate: 10,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'run',
-      frames: this.anims.generateFrameNumbers('player_run', { start: 0, end: 5 }),
-      frameRate: 14,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'jump',
-      frames: this.anims.generateFrameNumbers('player_jump', { start: 0, end: 3 }),
-      frameRate: 10,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'fall',
-      frames: this.anims.generateFrameNumbers('player_jump', { start: 4, end: 7 }),
-      frameRate: 10,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'attack',
-      frames: this.anims.generateFrameNumbers('player_attack1', { start: 0, end: 3 }),
-      frameRate: 12,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'walkattack',
-      frames: this.anims.generateFrameNumbers('player_walkattack', { start: 0, end: 5 }),
-      frameRate: 12,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'hurt',
-      frames: this.anims.generateFrameNumbers('player_hurt', { start: 0, end: 3 }),
-      frameRate: 10,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'death',
-      frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 7 }),
-      frameRate: 10,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'dust',
-      frames: this.anims.generateFrameNumbers('dust', { start: 0, end: 5 }),
-      frameRate: 16,
-      repeat: -1  // repete enquanto o dash durar
-    });
-    this.anims.create({
-      key: 'coin-spin',
-      frames: this.anims.generateFrameNumbers('coins', { start: 48, end: 59 }),
-      frameRate: 12,
-      repeat: -1
-    });
+    if (!this.anims.exists('idle'))
+      this.anims.create({ key: 'idle', frames: this.anims.generateFrameNumbers('player_idle', { start: 0, end: 3 }), frameRate: 8, repeat: -1 });
+    if (!this.anims.exists('walk'))
+      this.anims.create({ key: 'walk', frames: this.anims.generateFrameNumbers('player_walk', { start: 0, end: 5 }), frameRate: 10, repeat: -1 });
+    if (!this.anims.exists('run'))
+      this.anims.create({ key: 'run', frames: this.anims.generateFrameNumbers('player_run', { start: 0, end: 5 }), frameRate: 14, repeat: -1 });
+    if (!this.anims.exists('jump'))
+      this.anims.create({ key: 'jump', frames: this.anims.generateFrameNumbers('player_jump', { start: 0, end: 3 }), frameRate: 10, repeat: 0 });
+    if (!this.anims.exists('fall'))
+      this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('player_jump', { start: 4, end: 7 }), frameRate: 10, repeat: -1 });
+    if (!this.anims.exists('hurt'))
+      this.anims.create({ key: 'hurt', frames: this.anims.generateFrameNumbers('player_hurt', { start: 0, end: 3 }), frameRate: 10, repeat: 0 });
+    if (!this.anims.exists('death'))
+      this.anims.create({ key: 'death', frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 7 }), frameRate: 10, repeat: 0 });
+    if (!this.anims.exists('dust'))
+      this.anims.create({ key: 'dust', frames: this.anims.generateFrameNumbers('dust', { start: 0, end: 5 }), frameRate: 16, repeat: -1 });
+    if (!this.anims.exists('coin-spin'))
+      this.anims.create({ key: 'coin-spin', frames: this.anims.generateFrameNumbers('coins', { start: 48, end: 59 }), frameRate: 12, repeat: -1 });
 
     // Moedas
     this.coins = this.physics.add.staticGroup();
@@ -219,14 +171,12 @@ export default class GameScene extends Phaser.Scene {
     // Input
     this.cursors = this.input.keyboard.createCursorKeys();
     this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
-    this.attackKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.dashKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
     // Estado do jogador
     this.isJumping = false;
     this.jumpTimer = 0;
     this.jumpMaxTime = 100;
-    this.isAttacking = false;
     this.wasRunning = false;
     this.isDashing = false;
     this.dashTimer = 0;
@@ -238,8 +188,7 @@ export default class GameScene extends Phaser.Scene {
     this.isDead = false;
     this.isSpawning = true;
     this.isPaused = false;
-    this.attackEnabled = false;
-    this.dashEnabled = true;
+    this.dashEnabled = false;
 
     this.music = this.sound.add('level1-theme', { loop: true, volume: 0.5 });
     this.deathSfx = this.sound.add('death-sfx');
@@ -267,12 +216,6 @@ export default class GameScene extends Phaser.Scene {
 
     if (!this.isFirstEntry) this.spawnPlayer();
 
-    // Evento fim de animação
-    this.player.on('animationcomplete', (anim) => {
-      if (anim.key === 'attack' || anim.key === 'walkattack') {
-        this.isAttacking = false;
-      }
-    });
   }
 
   showLevelIntro() {
@@ -631,6 +574,7 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.enteringCave || this.isSpawning || this.isDead) return;
 
+    // Timer
     if (!this.timerActive && (this.cursors.left.isDown || this.cursors.right.isDown))
       this.timerActive = true;
 
@@ -663,6 +607,7 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
+    // Dash
     if (this.dashEnabled) {
       // Cooldown do dash
       if (this.dashCooldown > 0) {
@@ -697,17 +642,6 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
-    if (this.attackEnabled) {
-      if (Phaser.Input.Keyboard.JustDown(this.attackKey) && !this.isAttacking && !this.isDashing) {
-        this.isAttacking = true;
-        if (this.cursors.left.isDown || this.cursors.right.isDown) {
-          this.player.anims.play('walkattack', true);
-        } else {
-          this.player.anims.play('attack', true);
-        }
-      }
-    }
-
     // Salto
     if (this.cursors.up.isDown) {
       if (onGround && !this.isJumping) {
@@ -715,7 +649,7 @@ export default class GameScene extends Phaser.Scene {
         this.wasRunning = isRunning;
         this.isJumping = true;
         this.jumpTimer = 0;
-        if (!this.isAttacking) this.player.anims.play('jump', true);
+        this.player.anims.play('jump', true);
       } else if (this.isJumping && this.jumpTimer < this.jumpMaxTime) {
         this.player.body.setGravityY(-900);
         this.jumpTimer += this.game.loop.delta;
@@ -736,14 +670,14 @@ export default class GameScene extends Phaser.Scene {
         const airSpeed = this.wasRunning ? 320 : 200;
         this.player.setVelocityX(onGround ? -speed : -airSpeed);
         this.player.setFlipX(true);
-        if (onGround && !this.isAttacking) {
+        if (onGround) {
           this.player.anims.play(isRunning ? 'run' : 'walk', true);
         }
       } else if (this.cursors.right.isDown) {
         const airSpeed = this.wasRunning ? 320 : 200;
         this.player.setVelocityX(onGround ? speed : airSpeed);
         this.player.setFlipX(false);
-        if (onGround && !this.isAttacking) {
+        if (onGround) {
           this.player.anims.play(isRunning ? 'run' : 'walk', true);
         }
       } else {
@@ -753,14 +687,14 @@ export default class GameScene extends Phaser.Scene {
         } else {
           this.player.setVelocityX(this.player.body.velocity.x * 0.92);
         }
-        if (onGround && !this.isAttacking) {
+        if (onGround) {
           this.player.anims.play('idle', true);
         }
       }
     }
 
     // Animação de queda
-    if (!onGround && !this.isAttacking && !this.isDashing) {
+    if (!onGround && !this.isDashing) {
       if (this.player.body.velocity.y > 100) {
         this.player.anims.play('fall', true);
       }

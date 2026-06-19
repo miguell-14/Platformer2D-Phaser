@@ -2,10 +2,12 @@ import { locale } from '../locale.js';
 
 export default class LevelSelectScene extends Phaser.Scene {
   constructor() {
+    // Inicializa a cena de seleção de nível
     super({ key: 'LevelSelectScene' });
   }
 
   create() {
+    // Cria o ecra de selecao de nivel com cartoes interativos e navegacao
     const width = this.scale.width;
     const height = this.scale.height;
     this.cameras.main.fadeIn(300, 0, 0, 0);
@@ -33,6 +35,7 @@ export default class LevelSelectScene extends Phaser.Scene {
       strokeThickness: 5
     }).setOrigin(0.5);
 
+    // Níveis
     const levels = [
       { key: 'level1', scene: 'GameScene', unlocked: true, maxCoins: 44 },
       { key: 'level2', scene: 'GameScene2', unlocked: JSON.parse(localStorage.getItem('level1') || '{}').completed === true, maxCoins: 100 },
@@ -132,6 +135,7 @@ export default class LevelSelectScene extends Phaser.Scene {
     this.originalVolume = this.sound.volume;
     this.createSettingsPanel();
 
+    // Navegação por teclado
     const keys = this.input.keyboard.createCursorKeys();
 
     keys.left.on('down', () => {
@@ -164,6 +168,7 @@ export default class LevelSelectScene extends Phaser.Scene {
   }
 
   updateCards() {
+    // Atualiza o destaque visual do cartao de nivel selecionado
     this.cards.forEach((card, i) => {
       const selected = i === this.selected;
       const unlocked = this.levels[i].unlocked;
@@ -282,7 +287,4 @@ export default class LevelSelectScene extends Phaser.Scene {
     this.settingsPanel.add([overlay, panel, title, volLabel, track, thumb, langLabel, ...flagObjects, backBtn, saveBtn]);
   }
 
-  updateCursor() {
-    // kept for compatibility, logic moved to updateCards
-  }
 }

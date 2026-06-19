@@ -2,14 +2,18 @@ import { locale } from '../locale.js';
 
 export default class GameOverScene extends Phaser.Scene {
   constructor() {
+    // Inicializa a cena de game over
     super({ key: 'GameOverScene' });
   }
 
   create() {
+    // Cria o ecra de game over com botao para voltar ao menu
     const cx = 400, cy = 225;
 
+    // Fundo
     this.add.rectangle(cx, cy, 800, 450, 0x000000, 1);
 
+    // Título
     this.add.text(cx, cy - 60, 'Game Over', {
       fontSize: '52px',
       fill: '#ff4444',
@@ -17,6 +21,7 @@ export default class GameOverScene extends Phaser.Scene {
       strokeThickness: 6
     }).setOrigin(0.5);
 
+    // Botão menu
     const menuBtn = this.add.text(cx, cy + 40, locale.t('mainMenu'), {
       fontSize: '22px',
       fill: '#ffffff',
@@ -34,6 +39,7 @@ export default class GameOverScene extends Phaser.Scene {
       });
     });
 
+    // Entrada
     this.cameras.main.fadeIn(500, 0, 0, 0);
   }
 }

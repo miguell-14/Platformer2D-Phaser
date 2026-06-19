@@ -24,11 +24,11 @@
             "scaleInEditor": 1
         },
         "level1.tmx": {
-            "scale": 0.8016,
-            "selectedLayer": 0,
+            "scale": 1.3707,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 1672.2804391217567,
-                "y": 107.90918163672654
+                "x": 3346.465309695776,
+                "y": 145.9108484715839
             }
         },
         "level1.tmx#Coins": {
@@ -49,8 +49,8 @@
             "scale": 1.1857,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 3545.163194737286,
-                "y": 20.662899553006667
+                "x": 435.60765792358944,
+                "y": 152.2307497680695
             }
         },
         "level2.tmx#Coins": {

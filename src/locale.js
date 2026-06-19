@@ -82,9 +82,11 @@ const strings = {
 export const locale = {
   lang: 'en',
   t(key) {
+    // Traduz uma chave para o idioma ativo
     return strings[this.lang][key] ?? key;
   },
   setLang(lang) {
+    // Define o idioma ativo
     this.lang = lang;
   }
 };

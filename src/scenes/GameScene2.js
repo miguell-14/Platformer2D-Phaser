@@ -2,15 +2,18 @@ import { locale } from '../locale.js';
 
 export default class GameScene2 extends Phaser.Scene {
   constructor() {
+    // Inicializa a cena do nível 2
     super({ key: 'GameScene2' });
   }
 
   init(data) {
+    // Recebe dados entre cenas, como as vidas restantes
     this.lives = data.lives !== undefined ? data.lives : 3;
     this.isFirstEntry = data.lives === undefined;
   }
 
   create() {
+    // Constroi e inicializa todos os elementos do nivel 2
     const width = this.scale.width;
     const height = this.scale.height;
     if (!this.isFirstEntry) this.cameras.main.fadeIn(700, 0, 0, 0);
@@ -103,79 +106,24 @@ export default class GameScene2 extends Phaser.Scene {
     this.cameras.main.startFollow(this.player);
 
     // Animações
-    this.anims.create({
-      key: 'idle',
-      frames: this.anims.generateFrameNumbers('player_idle', { start: 0, end: 3 }),
-      frameRate: 8,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'walk',
-      frames: this.anims.generateFrameNumbers('player_walk', { start: 0, end: 5 }),
-      frameRate: 10,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'run',
-      frames: this.anims.generateFrameNumbers('player_run', { start: 0, end: 5 }),
-      frameRate: 14,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'jump',
-      frames: this.anims.generateFrameNumbers('player_jump', { start: 0, end: 3 }),
-      frameRate: 10,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'fall',
-      frames: this.anims.generateFrameNumbers('player_jump', { start: 4, end: 7 }),
-      frameRate: 10,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'attack',
-      frames: this.anims.generateFrameNumbers('player_attack1', { start: 0, end: 3 }),
-      frameRate: 12,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'walkattack',
-      frames: this.anims.generateFrameNumbers('player_walkattack', { start: 0, end: 5 }),
-      frameRate: 12,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'hurt',
-      frames: this.anims.generateFrameNumbers('player_hurt', { start: 0, end: 3 }),
-      frameRate: 10,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'death',
-      frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 7 }),
-      frameRate: 10,
-      repeat: 0
-    });
-    this.anims.create({
-      key: 'dust',
-      frames: this.anims.generateFrameNumbers('dust', { start: 0, end: 5 }),
-      frameRate: 16,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'coin-spin',
-      frames: this.anims.generateFrameNumbers('coins', { start: 48, end: 59 }),
-      frameRate: 12,
-      repeat: -1
-    });
-    this.anims.create({
-      key: 'climb',
-      frames: this.anims.generateFrameNumbers('player_climb', { start: 0, end: 3 }),
-      frameRate: 8,
-      repeat: -1
-    });
-
+    if (!this.anims.exists('idle'))
+      this.anims.create({ key: 'idle', frames: this.anims.generateFrameNumbers('player_idle', { start: 0, end: 3 }), frameRate: 8, repeat: -1 });
+    if (!this.anims.exists('walk'))
+      this.anims.create({ key: 'walk', frames: this.anims.generateFrameNumbers('player_walk', { start: 0, end: 5 }), frameRate: 10, repeat: -1 });
+    if (!this.anims.exists('run'))
+      this.anims.create({ key: 'run', frames: this.anims.generateFrameNumbers('player_run', { start: 0, end: 5 }), frameRate: 14, repeat: -1 });
+    if (!this.anims.exists('jump'))
+      this.anims.create({ key: 'jump', frames: this.anims.generateFrameNumbers('player_jump', { start: 0, end: 3 }), frameRate: 10, repeat: 0 });
+    if (!this.anims.exists('fall'))
+      this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('player_jump', { start: 4, end: 7 }), frameRate: 10, repeat: -1 });
+    if (!this.anims.exists('hurt'))
+      this.anims.create({ key: 'hurt', frames: this.anims.generateFrameNumbers('player_hurt', { start: 0, end: 3 }), frameRate: 10, repeat: 0 });
+    if (!this.anims.exists('death'))
+      this.anims.create({ key: 'death', frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 7 }), frameRate: 10, repeat: 0 });
+    if (!this.anims.exists('dust'))
+      this.anims.create({ key: 'dust', frames: this.anims.generateFrameNumbers('dust', { start: 0, end: 5 }), frameRate: 16, repeat: -1 });
+    if (!this.anims.exists('coin-spin'))
+      this.anims.create({ key: 'coin-spin', frames: this.anims.generateFrameNumbers('coins', { start: 48, end: 59 }), frameRate: 12, repeat: -1 });
     // Moedas
     this.coins = this.physics.add.staticGroup();
     objectLayer.objects.filter(o => o.name === 'coin').forEach(coinObj => {
@@ -184,16 +132,6 @@ export default class GameScene2 extends Phaser.Scene {
       coin.refreshBody();
       coin.anims.play('coin-spin');
     });
-
-    // Escadas
-    this.ladderZones = objectLayer.objects
-      .filter(o => o.name === 'ladder')
-      .map(obj => this.add.zone(
-        obj.x * 2 + obj.width,
-        obj.y * 2 + obj.height,
-        obj.width * 2,
-        obj.height * 2
-      ));
 
     // Plataformas moveis
     const platGroups = {};
@@ -273,14 +211,12 @@ export default class GameScene2 extends Phaser.Scene {
     // Input
     this.cursors = this.input.keyboard.createCursorKeys();
     this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
-    this.attackKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.dashKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
     // Estado do jogador
     this.isJumping = false;
     this.jumpTimer = 0;
     this.jumpMaxTime = 100;
-    this.isAttacking = false;
     this.wasRunning = false;
     this.isDashing = false;
     this.dashTimer = 0;
@@ -292,9 +228,7 @@ export default class GameScene2 extends Phaser.Scene {
     this.isDead = false;
     this.isSpawning = true;
     this.isPaused = false;
-    this.attackEnabled = true;
     this.dashEnabled = true;
-    this.isClimbing = false;
 
     this.music = this.sound.add('level2-theme', { loop: true, volume: 0.5 });
     this.deathSfx = this.sound.add('death-sfx');
@@ -323,11 +257,6 @@ export default class GameScene2 extends Phaser.Scene {
 
     if (!this.isFirstEntry) this.spawnPlayer();
 
-    this.player.on('animationcomplete', (anim) => {
-      if (anim.key === 'attack' || anim.key === 'walkattack') {
-        this.isAttacking = false;
-      }
-    });
   }
 
   showLevelIntro() {
@@ -720,6 +649,7 @@ export default class GameScene2 extends Phaser.Scene {
 
     if (this.enteringCave || this.isSpawning || this.isDead) return;
 
+    // Timer
     if (!this.timerActive && (this.cursors.left.isDown || this.cursors.right.isDown))
       this.timerActive = true;
 
@@ -744,6 +674,7 @@ export default class GameScene2 extends Phaser.Scene {
       return;
     }
 
+    // Dica de dash
     if (!this.dashHint.shown && this.player.y >= 15 * 16 * 2 && this.player.x > this.dashHint.triggerX) {
       this.dashHint.shown = true;
       this.showHint(this.dashHint.container);
@@ -773,42 +704,7 @@ export default class GameScene2 extends Phaser.Scene {
       p.sprite.body.reset(p.sprite.x, p.sprite.y);
     });
 
-    // Escada
-    const playerBounds = this.player.getBounds();
-    const onLadder = this.ladderZones.some(zone =>
-      Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, zone.getBounds())
-    );
-
-    if (this.isClimbing && !onLadder) {
-      this.isClimbing = false;
-      this.player.body.allowGravity = true;
-    }
-
-    if (!this.isClimbing && onLadder && (this.cursors.up.isDown || this.cursors.down.isDown)) {
-      this.isClimbing = true;
-      this.isJumping = false;
-      this.player.body.allowGravity = false;
-    }
-
-    if (this.isClimbing) {
-      this.player.setVelocityX(0);
-      if (this.cursors.up.isDown) {
-        this.player.setVelocityY(-150);
-        this.player.anims.play('climb', true);
-      } else if (this.cursors.down.isDown) {
-        this.player.setVelocityY(150);
-        this.player.anims.play('climb', true);
-      } else {
-        this.player.setVelocityY(0);
-        this.player.anims.pause();
-      }
-      if (this.cursors.left.isDown || this.cursors.right.isDown) {
-        this.isClimbing = false;
-        this.player.body.allowGravity = true;
-      }
-      return;
-    }
-
+    // Dash
     if (this.dashEnabled) {
       if (this.dashCooldown > 0) {
         this.dashCooldown -= this.game.loop.delta;
@@ -840,17 +736,6 @@ export default class GameScene2 extends Phaser.Scene {
       }
     }
 
-    if (this.attackEnabled) {
-      if (Phaser.Input.Keyboard.JustDown(this.attackKey) && !this.isAttacking && !this.isDashing) {
-        this.isAttacking = true;
-        if (this.cursors.left.isDown || this.cursors.right.isDown) {
-          this.player.anims.play('walkattack', true);
-        } else {
-          this.player.anims.play('attack', true);
-        }
-      }
-    }
-
     // Salto
     if (this.cursors.up.isDown) {
       if (onGround && !this.isJumping) {
@@ -858,7 +743,7 @@ export default class GameScene2 extends Phaser.Scene {
         this.wasRunning = isRunning;
         this.isJumping = true;
         this.jumpTimer = 0;
-        if (!this.isAttacking) this.player.anims.play('jump', true);
+        this.player.anims.play('jump', true);
       } else if (this.isJumping && this.jumpTimer < this.jumpMaxTime) {
         this.player.body.setGravityY(-900);
         this.jumpTimer += this.game.loop.delta;
@@ -879,14 +764,14 @@ export default class GameScene2 extends Phaser.Scene {
         const airSpeed = this.wasRunning ? 320 : 200;
         this.player.setVelocityX(onGround ? -speed : -airSpeed);
         this.player.setFlipX(true);
-        if (onGround && !this.isAttacking) {
+        if (onGround) {
           this.player.anims.play(isRunning ? 'run' : 'walk', true);
         }
       } else if (this.cursors.right.isDown) {
         const airSpeed = this.wasRunning ? 320 : 200;
         this.player.setVelocityX(onGround ? speed : airSpeed);
         this.player.setFlipX(false);
-        if (onGround && !this.isAttacking) {
+        if (onGround) {
           this.player.anims.play(isRunning ? 'run' : 'walk', true);
         }
       } else {
@@ -896,14 +781,14 @@ export default class GameScene2 extends Phaser.Scene {
         } else {
           this.player.setVelocityX(this.player.body.velocity.x * 0.92);
         }
-        if (onGround && !this.isAttacking) {
+        if (onGround) {
           this.player.anims.play('idle', true);
         }
       }
     }
 
     // Animação de queda
-    if (!onGround && !this.isAttacking && !this.isDashing) {
+    if (!onGround && !this.isDashing) {
       if (this.player.body.velocity.y > 100) {
         this.player.anims.play('fall', true);
       }
