@@ -1,8 +1,8 @@
 import { locale } from '../locale.js';
 
-export default class GameScene extends Phaser.Scene {
+export default class GameScene2 extends Phaser.Scene {
   constructor() {
-    super({ key: 'GameScene' });
+    super({ key: 'GameScene2' });
   }
 
   init(data) {
@@ -25,29 +25,24 @@ export default class GameScene extends Phaser.Scene {
     this.bgFront = this.add.tileSprite(0, height, width, 320, 'bg_front')
       .setOrigin(0, 1).setScrollFactor(0);
 
-    // Tutorial hints (added before tile layers so they render behind them)
-    this.setupTutorialHints();
-
     // Tilemap
-    const map = this.make.tilemap({ key: 'level1' });
-    const tileset = map.addTilesetImage('Tileset', 'tiles', 16, 16, 1, 2);
+    const map = this.make.tilemap({ key: 'level2' });
+    const tileset = map.addTilesetImage('Tileset', 'tiles-plain', 16, 16);
     const treesTileset = map.addTilesetImage('Trees', 'trees', 16, 16);
+    const coinsTileset = map.addTilesetImage('Coins', 'coins', 16, 16);
+    const dungeonTileset = map.addTilesetImage('DungeonTileset', 'dungeon-tiles', 16, 16);
 
-    const decorativeRocksLayer = map.createLayer('DecorativeRocks', tileset, 0, 0);
+    const allTilesets = [tileset, treesTileset, coinsTileset, dungeonTileset];
+
+    const decorativeRocksLayer = map.createLayer('DecorativeRocks', allTilesets, 0, 0);
     decorativeRocksLayer.setScale(2);
 
-    if (map.getLayer('Trees')) {
-      map.createLayer('Trees', treesTileset, 0, 0).setScale(2);
-    }
-
-    
-    const groundLayer = map.createLayer('Ground', tileset, 0, 0);
+    const groundLayer = map.createLayer('Ground', allTilesets, 0, 0);
     groundLayer.setScale(2);
     groundLayer.setCollisionByProperty({ collides: true });
-    
-    const backgroundLayer = map.createLayer('Background', [tileset, treesTileset], 0, 0);
-    backgroundLayer.setScale(2);
 
+    const backgroundLayer = map.createLayer('Background', allTilesets, 0, 0);
+    backgroundLayer.setScale(2);
 
     // Bounds
     this.physics.world.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
@@ -62,7 +57,7 @@ export default class GameScene extends Phaser.Scene {
     this.player.body.setSize(14, 28);
     this.player.body.setOffset(9, 4);
 
-    // Objeto de entrada da caverna
+    // Objeto de saída
     const objectLayer = map.getObjectLayer('Objects');
     const caveEntry = objectLayer.objects.find(o => o.name === 'caveEntry');
 
@@ -159,12 +154,18 @@ export default class GameScene extends Phaser.Scene {
       key: 'dust',
       frames: this.anims.generateFrameNumbers('dust', { start: 0, end: 5 }),
       frameRate: 16,
-      repeat: -1  // repete enquanto o dash durar
+      repeat: -1
     });
     this.anims.create({
       key: 'coin-spin',
       frames: this.anims.generateFrameNumbers('coins', { start: 48, end: 59 }),
       frameRate: 12,
+      repeat: -1
+    });
+    this.anims.create({
+      key: 'climb',
+      frames: this.anims.generateFrameNumbers('player_climb', { start: 0, end: 3 }),
+      frameRate: 8,
       repeat: -1
     });
 
@@ -176,6 +177,16 @@ export default class GameScene extends Phaser.Scene {
       coin.refreshBody();
       coin.anims.play('coin-spin');
     });
+
+    // Escadas
+    this.ladderZones = objectLayer.objects
+      .filter(o => o.name === 'ladder')
+      .map(obj => this.add.zone(
+        obj.x * 2 + obj.width,
+        obj.y * 2 + obj.height,
+        obj.width * 2,
+        obj.height * 2
+      ));
 
     // Lives UI
     this.add.image(20, 16, 'player_idle', 0)
@@ -238,12 +249,13 @@ export default class GameScene extends Phaser.Scene {
     this.isDead = false;
     this.isSpawning = true;
     this.isPaused = false;
-    this.attackEnabled = false;
+    this.attackEnabled = true;
     this.dashEnabled = true;
+    this.isClimbing = false;
 
     this.music = this.sound.add('level1-theme', { loop: true, volume: 0.5 });
     this.deathSfx = this.sound.add('death-sfx');
-    this.coinSfx = this.sound.add('coin-sfx', {volume: 0.4});
+    this.coinSfx = this.sound.add('coin-sfx', { volume: 0.4 });
 
     const menuMusic = this.sound.get('menu-music');
     if (menuMusic && menuMusic.isPlaying) {
@@ -267,7 +279,6 @@ export default class GameScene extends Phaser.Scene {
 
     if (!this.isFirstEntry) this.spawnPlayer();
 
-    // Evento fim de animação
     this.player.on('animationcomplete', (anim) => {
       if (anim.key === 'attack' || anim.key === 'walkattack') {
         this.isAttacking = false;
@@ -279,7 +290,7 @@ export default class GameScene extends Phaser.Scene {
     const cx = 400, cy = 225;
     const overlay = this.add.rectangle(cx, cy, 800, 450, 0x000000, 1)
       .setScrollFactor(0).setDepth(50);
-    const text = this.add.text(cx, cy, locale.t('level1'), {
+    const text = this.add.text(cx, cy, locale.t('level2'), {
       fontSize: '48px',
       fill: '#ffffff',
       stroke: '#000000',
@@ -402,107 +413,9 @@ export default class GameScene extends Phaser.Scene {
           this.player.setVelocityX(0);
           this.player.anims.play('idle', true);
           this.input.keyboard.enabled = true;
-          const moverHint = this.tutorialTriggers[0];
-          moverHint.shown = true;
-          this.showHint(moverHint.container);
         });
       }
     });
-  }
-
-  showHint(container) {
-    this.tweens.add({
-      targets: container,
-      alpha: 1,
-      duration: 400,
-      ease: 'Power2',
-      onComplete: () => {
-        this.tweens.add({
-          targets: container,
-          y: container.y - 8,
-          duration: 1200,
-          yoyo: true,
-          repeat: 2,
-          ease: 'Sine.easeInOut',
-        });
-        this.time.delayedCall(4200, () => {
-          this.tweens.add({
-            targets: container,
-            alpha: 0,
-            duration: 600,
-            ease: 'Power2',
-          });
-        });
-      }
-    });
-  }
-
-  setupTutorialHints() {
-    const hints = [
-      { triggerX: 99999, x: 256,  y: 416, keys: ['←', '→'],   label: locale.t('hintMove') },
-      { triggerX: 750,   x: 864,  y: 416, keys: ['↑'],         label: locale.t('hintJump') },
-      { triggerX: 3350, x: 3488, y: 224, keys: ['⇧', '←/→'], label: locale.t('hintRun') },
-      { triggerX: 1400, x: 1504, y: 352, keys: ['↑'],         label: locale.t('hintHighJump') },
-    ];
-
-    this.tutorialTriggers = hints.map(h => {
-      const container = this.createKeyPrompt(h.x, h.y, h.keys, h.label);
-      return { triggerX: h.triggerX, container, shown: false };
-    });
-  }
-
-  createKeyPrompt(x, y, keys, label) {
-    const container = this.add.container(x, y);
-    const kw = 40, kh = 36, gap = 8;
-    const totalW = keys.length * kw + (keys.length - 1) * gap;
-
-    const panelPx = 16, panelPy = 10;
-    const panelW = Math.max(totalW, label.length * 10) + panelPx * 2;
-    const panelH = kh + 22 + panelPy * 2;
-
-    const panel = this.add.graphics();
-    panel.fillStyle(0x000000, 0.45);
-    panel.fillRoundedRect(-panelW / 2, -panelH / 2, panelW, panelH, 10);
-    container.add(panel);
-
-    const startX = -(totalW / 2) + kw / 2;
-    keys.forEach((label, i) => {
-      const kx = startX + i * (kw + gap);
-      const ky = -10;
-
-      const shadow = this.add.graphics();
-      shadow.fillStyle(0x333333, 0.8);
-      shadow.fillRoundedRect(kx - kw / 2 + 2, ky - kh / 2 + 4, kw, kh, 5);
-
-      const cap = this.add.graphics();
-      cap.fillStyle(0xeeeeee, 1);
-      cap.fillRoundedRect(kx - kw / 2, ky - kh / 2, kw, kh, 5);
-      cap.lineStyle(1.5, 0xaaaaaa, 1);
-      cap.strokeRoundedRect(kx - kw / 2, ky - kh / 2, kw, kh, 5);
-
-      const fontSize = label.length > 4 ? '9px' : label.length > 2 ? '11px' : '15px';
-      const keyText = this.add.text(kx, ky, label, {
-        fontFamily: 'monospace',
-        fontSize,
-        color: '#222222',
-        fontStyle: 'bold',
-      }).setOrigin(0.5);
-
-      container.add([shadow, cap, keyText]);
-    });
-
-    const labelText = this.add.text(0, kh / 2 + 5, label, {
-      fontFamily: 'Arial',
-      fontSize: '12px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5);
-    container.add(labelText);
-
-    container.setAlpha(0);
-    return container;
   }
 
   triggerDeath() {
@@ -564,9 +477,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   showLevelComplete() {
-    const prev = JSON.parse(localStorage.getItem('level1') || '{}');
+    const totalCoins = objectLayer => 44;
+    const prev = JSON.parse(localStorage.getItem('level2') || '{}');
     const best = Math.max(prev.coins || 0, this.coinCount);
-    localStorage.setItem('level1', JSON.stringify({ completed: true, coins: best }));
+    localStorage.setItem('level2', JSON.stringify({ completed: true, coins: best }));
 
     const cx = 400, cy = 225;
 
@@ -655,21 +569,47 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Tutorial hints
-    this.tutorialTriggers.forEach(hint => {
-      if (!hint.shown && this.player.x > hint.triggerX) {
-        hint.shown = true;
-        this.showHint(hint.container);
+    // Escada
+    const playerBounds = this.player.getBounds();
+    const onLadder = this.ladderZones.some(zone =>
+      Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, zone.getBounds())
+    );
+
+    if (this.isClimbing && !onLadder) {
+      this.isClimbing = false;
+      this.player.body.allowGravity = true;
+    }
+
+    if (!this.isClimbing && onLadder && (this.cursors.up.isDown || this.cursors.down.isDown)) {
+      this.isClimbing = true;
+      this.isJumping = false;
+      this.player.body.allowGravity = false;
+    }
+
+    if (this.isClimbing) {
+      this.player.setVelocityX(0);
+      if (this.cursors.up.isDown) {
+        this.player.setVelocityY(-150);
+        this.player.anims.play('climb', true);
+      } else if (this.cursors.down.isDown) {
+        this.player.setVelocityY(150);
+        this.player.anims.play('climb', true);
+      } else {
+        this.player.setVelocityY(0);
+        this.player.anims.pause();
       }
-    });
+      if (this.cursors.left.isDown || this.cursors.right.isDown) {
+        this.isClimbing = false;
+        this.player.body.allowGravity = true;
+      }
+      return;
+    }
 
     if (this.dashEnabled) {
-      // Cooldown do dash
       if (this.dashCooldown > 0) {
         this.dashCooldown -= this.game.loop.delta;
       }
 
-      // Dash
       if (Phaser.Input.Keyboard.JustDown(this.dashKey) && onGround && !this.isDashing && this.dashCooldown <= 0) {
         this.isDashing = true;
         this.dashTimer = 0;
@@ -684,7 +624,6 @@ export default class GameScene extends Phaser.Scene {
         this.dustEffect.anims.play('dust', true);
       }
 
-      // Durante o dash
       if (this.isDashing) {
         this.dustEffect.setPosition(this.player.x, this.player.y + 10);
         this.dashTimer += this.game.loop.delta;

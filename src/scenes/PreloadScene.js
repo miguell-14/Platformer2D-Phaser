@@ -27,8 +27,11 @@ export default class PreloadScene extends Phaser.Scene {
 
     // Tilemap
     this.load.tilemapTiledJSON('level1', 'assets/level1.json');
+    this.load.tilemapTiledJSON('level2', 'assets/level2.json');
     this.load.image('tiles', 'assets/images/tiles/Tileset-extruded.png');
+    this.load.image('tiles-plain', 'assets/images/tiles/Tileset.png');
     this.load.image('trees', 'assets/images/tiles/Trees.png');
+    this.load.image('dungeon-tiles', 'assets/images/tiles/Dungeon-tile-set.png');
     this.load.spritesheet('coins', 'assets/images/tiles/coins.png', { frameWidth: 16, frameHeight: 16 });
 
     // Flags
