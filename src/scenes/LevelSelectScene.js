@@ -35,7 +35,7 @@ export default class LevelSelectScene extends Phaser.Scene {
 
     const levels = [
       { key: 'level1', scene: 'GameScene', unlocked: true, maxCoins: 44 },
-      { key: 'level2', scene: 'GameScene2', unlocked: true, maxCoins: 100 },
+      { key: 'level2', scene: 'GameScene2', unlocked: JSON.parse(localStorage.getItem('level1') || '{}').completed === true, maxCoins: 100 },
     ];
 
     this.selected = 0;
