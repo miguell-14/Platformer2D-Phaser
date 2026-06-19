@@ -42,7 +42,7 @@ export default class GameScene2 extends Phaser.Scene {
 
     const groundLayer = map.createLayer('Ground', allTilesets, 0, 0);
     groundLayer.setScale(2);
-    groundLayer.setCollisionByProperty({ collides: true });
+    groundLayer.setCollisionByExclusion([-1]);
 
     // Bounds
     this.physics.world.setBounds(0, 0, map.widthInPixels * 2, map.heightInPixels * 2);
@@ -85,7 +85,11 @@ export default class GameScene2 extends Phaser.Scene {
     });
 
     // Colisão
-    this.physics.add.collider(this.player, groundLayer, null, (player, tile) => {
+    this.physics.add.collider(this.player, groundLayer, (player, tile) => {
+      if (this.isDashing && tile.properties && tile.properties.breakable) {
+        this.breakWall(groundLayer, tile.x, tile.y);
+      }
+    }, (player, tile) => {
       if (tile.properties && tile.properties.oneWay) {
         return player.body.velocity.y > 0;
       }
@@ -263,6 +267,7 @@ export default class GameScene2 extends Phaser.Scene {
         onComplete: () => menuMusic.stop() });
     }
 
+    this.setupDashHint();
     this.createPauseMenu();
     this.createPauseButton();
     if (this.isFirstEntry) this.showLevelIntro();
@@ -535,6 +540,137 @@ export default class GameScene2 extends Phaser.Scene {
     });
   }
 
+  setupDashHint() {
+    const tileSize = 16 * 2;
+    const hint = {
+      triggerX: 88 * tileSize - 200,
+      container: this.createKeyPrompt(88 * tileSize, 15 * tileSize, ['E'], locale.t('hintDash')),
+      shown: false
+    };
+    this.dashHint = hint;
+  }
+
+  showHint(container) {
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      duration: 400,
+      ease: 'Power2',
+      onComplete: () => {
+        this.tweens.add({
+          targets: container,
+          y: container.y - 8,
+          duration: 1200,
+          yoyo: true,
+          repeat: 2,
+          ease: 'Sine.easeInOut',
+        });
+        this.time.delayedCall(4200, () => {
+          this.tweens.add({ targets: container, alpha: 0, duration: 600, ease: 'Power2' });
+        });
+      }
+    });
+  }
+
+  createKeyPrompt(x, y, keys, label) {
+    const container = this.add.container(x, y);
+    const kw = 32, kh = 28, gap = 6;
+    const totalW = keys.length * kw + (keys.length - 1) * gap;
+    const maxLabelW = 90;
+
+    const panelPx = 12, panelPy = 8;
+    const panelW = Math.max(totalW, maxLabelW) + panelPx * 2;
+
+    const labelText = this.add.text(0, 0, label, {
+      fontFamily: 'Arial', fontSize: '11px',
+      color: '#ffffff', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 2,
+      wordWrap: { width: maxLabelW, useAdvancedWrap: true },
+      align: 'center'
+    }).setOrigin(0.5, 0);
+
+    const labelH = labelText.height;
+    const panelH = kh + labelH + 10 + panelPy * 2;
+
+    const panel = this.add.graphics();
+    panel.fillStyle(0x000000, 0.45);
+    panel.fillRoundedRect(-panelW / 2, -panelH / 2, panelW, panelH, 8);
+    container.add(panel);
+
+    const keyY = -panelH / 2 + panelPy + kh / 2;
+    const startX = -(totalW / 2) + kw / 2;
+    keys.forEach((keyLabel, i) => {
+      const kx = startX + i * (kw + gap);
+
+      const shadow = this.add.graphics();
+      shadow.fillStyle(0x333333, 0.8);
+      shadow.fillRoundedRect(kx - kw / 2 + 2, keyY - kh / 2 + 3, kw, kh, 4);
+
+      const cap = this.add.graphics();
+      cap.fillStyle(0xeeeeee, 1);
+      cap.fillRoundedRect(kx - kw / 2, keyY - kh / 2, kw, kh, 4);
+      cap.lineStyle(1.5, 0xaaaaaa, 1);
+      cap.strokeRoundedRect(kx - kw / 2, keyY - kh / 2, kw, kh, 4);
+
+      const fontSize = keyLabel.length > 4 ? '8px' : keyLabel.length > 2 ? '10px' : '13px';
+      const keyText = this.add.text(kx, keyY, keyLabel, {
+        fontFamily: 'monospace', fontSize,
+        color: '#222222', fontStyle: 'bold',
+      }).setOrigin(0.5);
+
+      container.add([shadow, cap, keyText]);
+    });
+
+    labelText.setPosition(0, keyY + kh / 2 + 6);
+    container.add(labelText);
+
+    container.setAlpha(0);
+    return container;
+  }
+
+  breakWall(layer, startX, startY) {
+    const queue = [{ x: startX, y: startY }];
+    const visited = new Set();
+    const broken = [];
+    while (queue.length > 0) {
+      const { x, y } = queue.shift();
+      const key = `${x},${y}`;
+      if (visited.has(key)) continue;
+      visited.add(key);
+      const tile = layer.getTileAt(x, y);
+      if (!tile || !tile.properties || !tile.properties.breakable) continue;
+      broken.push({ px: tile.pixelX * 2, py: tile.pixelY * 2 });
+      layer.removeTileAt(x, y);
+      queue.push({ x: x + 1, y }, { x: x - 1, y }, { x, y: y + 1 }, { x, y: y - 1 });
+    }
+
+    if (broken.length === 0) return;
+
+    this.cameras.main.shake(180, 0.008);
+
+    broken.forEach(({ px, py }) => {
+      for (let i = 0; i < 4; i++) {
+        const frag = this.add.rectangle(
+          px + Phaser.Math.Between(0, 32),
+          py + Phaser.Math.Between(0, 32),
+          Phaser.Math.Between(4, 10),
+          Phaser.Math.Between(4, 10),
+          0x8B6355
+        ).setDepth(5);
+
+        this.tweens.add({
+          targets: frag,
+          x: frag.x + Phaser.Math.Between(-40, 40),
+          y: frag.y + Phaser.Math.Between(-50, 10),
+          alpha: 0,
+          duration: Phaser.Math.Between(300, 600),
+          ease: 'Power2',
+          onComplete: () => frag.destroy()
+        });
+      }
+    });
+  }
+
   update(time, delta) {
     const onGround = this.player.body.blocked.down;
     const isRunning = this.shiftKey.isDown;
@@ -567,6 +703,11 @@ export default class GameScene2 extends Phaser.Scene {
     if (this.player.y > 680) {
       this.triggerDeath();
       return;
+    }
+
+    if (!this.dashHint.shown && this.player.x > this.dashHint.triggerX) {
+      this.dashHint.shown = true;
+      this.showHint(this.dashHint.container);
     }
 
     // Escada
